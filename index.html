@@ -84,10 +84,22 @@
 
         <!-- ================= DASHBOARD ================= -->
         <section id="dashboard" class="view-section active">
-            <div class="section-header">
+            <div class="section-header dashboard-welcome-header">
                 <div>
                     <h2>Dashboard</h2>
                     <p>Your productivity command center</p>
+                </div>
+            </div>
+
+            <!-- Welcome Banner Card -->
+            <div class="welcome-banner-card">
+                <div class="welcome-banner-text">
+                    <h2>Welcome back to LifeTrack!</h2>
+                    <p>“Consistency is the mastery of mastery.” — LifeTrack OS</p>
+                </div>
+                <div class="welcome-banner-actions">
+                    <button class="btn btn-primary" data-quick-nav="habits">+ Track Habits</button>
+                    <button class="btn btn-secondary" data-quick-nav="todos">+ Manage Tasks</button>
                 </div>
             </div>
 
@@ -121,7 +133,7 @@
                     <strong id="kpiTotalHabits">0</strong>
                 </article>
                 <article class="kpi-card">
-                    <span>Cycle Completion</span>
+                    <span>Overall Rate</span>
                     <strong id="kpiCompletionRate">0%</strong>
                 </article>
             </div>
@@ -130,19 +142,19 @@
             <div class="dashboard-charts-grid">
                 <article class="chart-card">
                     <header class="chart-header">
-                        <h3>Weekly Progress</h3>
+                        <h3>Weekly Overview</h3>
                     </header>
                     <div class="chart-container">
-                        <canvas id="dashboardWeeklyChart" aria-label="Weekly progress chart"></canvas>
+                        <canvas id="dashboardWeeklyChart" aria-label="Weekly overview chart"></canvas>
                     </div>
                 </article>
 
                 <article class="chart-card">
                     <header class="chart-header">
-                        <h3>Habit Categories</h3>
+                        <h3>Category Distribution</h3>
                     </header>
                     <div class="chart-container">
-                        <canvas id="dashboardCategoryChart" aria-label="Habit category chart"></canvas>
+                        <canvas id="dashboardCategoryChart" aria-label="Category distribution chart"></canvas>
                     </div>
                 </article>
             </div>
@@ -484,10 +496,6 @@
 <script src="script.js"></script>
 
 <script>
-    /*
-        LifeTrack Bootstrap
-        Starts the application after the document is fully loaded.
-    */
     document.addEventListener("DOMContentLoaded", () => {
         if (window.lifeTrackApp) {
             return;
