@@ -2487,13 +2487,6 @@ class LifeTrackApp {
     }
 
 
-
-
-
-
-
-
-
     renderSection(tab) {
 
 
@@ -2564,14 +2557,17 @@ class LifeTrackApp {
 
 
 
+            case "settings":
+
+                // Settings views are static/managed via settings controls
+
+            break;
+
+
         }
 
 
     }
-
-
-
-
 
 
 
@@ -2593,6 +2589,23 @@ class LifeTrackApp {
 
 
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
 
 
@@ -4698,7 +4711,131 @@ lifeTrackApp
 
 
 
+/* ==========================================================================
+   ADD NOTE SYSTEM
+   ========================================================================== */
 
+document
+.getElementById(
+"addNoteBtn"
+)
+?.addEventListener(
+"click",
+()=>{
+    modalManager.open("noteModal");
+});
+
+document
+.getElementById(
+"noteForm"
+)
+?.addEventListener(
+"submit",
+event => {
+    event.preventDefault();
+
+    const newNote = {
+        id: Utils.generateId("note"),
+        title: document.getElementById("noteTitleInput").value,
+        content: document.getElementById("noteContentInput").value,
+        pinned: document.getElementById("notePinnedInput").checked,
+        isChecklist: document.getElementById("noteIsChecklistInput").checked,
+        createdAt: new Date().toISOString()
+    };
+
+    appState.update(db => {
+        db.notes.push(newNote);
+    });
+
+    event.target.reset();
+    modalManager.close("noteModal");
+    lifeTrackApp.renderNotes();
+});
+
+
+/* ==========================================================================
+   ADD TASK (TODO) SYSTEM
+   ========================================================================== */
+
+document
+.getElementById(
+"addTodoBtn"
+)
+?.addEventListener(
+"click",
+()=>{
+    modalManager.open("todoModal");
+});
+
+document
+.getElementById(
+"todoForm"
+)
+?.addEventListener(
+"submit",
+event => {
+    event.preventDefault();
+
+    const newTodo = {
+        id: Utils.generateId("todo"),
+        title: document.getElementById("todoTextInput").value,
+        priority: document.getElementById("todoPriorityInput").value,
+        dueDate: document.getElementById("todoDueDateInput").value || null,
+        completed: false,
+        createdAt: new Date().toISOString()
+    };
+
+    appState.update(db => {
+        db.todos.push(newTodo);
+    });
+
+    event.target.reset();
+    modalManager.close("todoModal");
+    lifeTrackApp.renderTodos();
+    lifeTrackApp.renderDashboard();
+});
+
+/* ==========================================================================
+   SETTINGS DATA MANAGEMENT (EXPORT / IMPORT / RESET)
+   ========================================================================== */
+
+document
+.getElementById(
+"exportJsonBtn"
+)
+?.addEventListener(
+"click",
+() => {
+    backupManager.export();
+});
+
+
+document
+.getElementById(
+"importJsonInput"
+)
+?.addEventListener(
+"change",
+event => {
+    const file = event.target.files[0];
+    if (file) {
+        backupManager.import(file);
+    }
+});
+
+
+document
+.getElementById(
+"resetDataBtn"
+)
+?.addEventListener(
+"click",
+() => {
+    if (confirm("Are you sure you want to reset all data? This cannot be undone.")) {
+        appState.reset();
+        location.reload();
+    }
+});
 
 
 
