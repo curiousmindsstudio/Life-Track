@@ -3170,6 +3170,14 @@ textarea {
    DASHBOARD POLISH & WELCOME BANNER STYLES
    ========================================================================== */
 
+.sidebar {
+    z-index: 3000 !important;
+}
+
+.sidebar-backdrop {
+    z-index: 2500 !important;
+}
+
 .welcome-banner-card {
     background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(16, 185, 129, 0.12));
     border: 1px solid var(--border-color);
