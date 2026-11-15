@@ -1,0 +1,2734 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="LifeTrack — A modern offline-first productivity and habit operating system">
+
+    <meta name="theme-color" content="#4f46e5">
+
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+
+    <title>
+        LifeTrack — Productivity OS
+    </title>
+
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+
+
+    <!-- Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+</head>
+
+
+
+<body>
+
+
+<!-- App Loading Screen -->
+
+<div id="appLoader" class="app-loader">
+
+    <div class="loader-logo">
+        LT
+    </div>
+
+    <h2>
+        LifeTrack
+    </h2>
+
+    <p>
+        Loading your productivity system...
+    </p>
+
+</div>
+
+
+
+<div id="app">
+
+
+<!-- ================= SIDEBAR ================= -->
+
+
+<aside 
+    id="sidebar"
+    class="sidebar"
+    aria-label="Application navigation">
+
+
+    <div class="sidebar-header">
+
+
+        <div class="brand">
+
+
+            <div 
+                class="brand-icon"
+                aria-hidden="true">
+
+                LT
+
+            </div>
+
+
+            <div>
+
+                <h1>
+                    LifeTrack
+                </h1>
+
+                <p>
+                    Productivity OS
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+
+        <button
+            id="sidebarCloseMobile"
+            class="icon-btn mobile-only"
+            aria-label="Close navigation">
+
+            ×
+
+        </button>
+
+
+    </div>
+
+
+
+
+
+    <nav class="sidebar-nav">
+
+
+        <button
+            class="nav-item active"
+            data-tab="dashboard">
+
+            <span aria-hidden="true">
+                📊
+            </span>
+
+            Dashboard
+
+        </button>
+
+
+
+
+
+        <button
+            class="nav-item"
+            data-tab="habits">
+
+            <span aria-hidden="true">
+                ✅
+            </span>
+
+            Habit Tracker
+
+        </button>
+
+
+
+
+
+        <button
+            class="nav-item"
+            data-tab="calendar">
+
+            <span aria-hidden="true">
+                📅
+            </span>
+
+            Calendar
+
+        </button>
+
+
+
+
+
+        <button
+            class="nav-item"
+            data-tab="countdowns">
+
+            <span aria-hidden="true">
+                🎯
+            </span>
+
+            Goals
+
+        </button>
+
+
+
+
+
+        <button
+            class="nav-item"
+            data-tab="analytics">
+
+            <span aria-hidden="true">
+                📈
+            </span>
+
+            Analytics
+
+        </button>
+
+
+
+
+
+        <button
+            class="nav-item"
+            data-tab="notes">
+
+            <span aria-hidden="true">
+                📝
+            </span>
+
+            Notes
+
+        </button>
+
+
+
+
+
+        <button
+            class="nav-item"
+            data-tab="todos">
+
+            <span aria-hidden="true">
+                ☑️
+            </span>
+
+            Tasks
+
+        </button>
+
+
+
+
+
+        <button
+            class="nav-item"
+            data-tab="archive">
+
+            <span aria-hidden="true">
+                🗃️
+            </span>
+
+            Archive
+
+        </button>
+
+
+
+
+
+        <button
+            class="nav-item"
+            data-tab="settings">
+
+            <span aria-hidden="true">
+                ⚙️
+            </span>
+
+            Settings
+
+        </button>
+
+
+    </nav>
+
+
+
+
+
+    <div class="sidebar-footer">
+
+
+        <button
+            id="archiveSessionBtn"
+            class="btn btn-secondary">
+
+            💾 Save Snapshot
+
+        </button>
+
+
+    </div>
+
+
+
+</aside>
+
+
+
+
+
+<!-- Mobile overlay -->
+
+<div 
+    id="sidebarBackdrop"
+    class="sidebar-backdrop">
+
+</div>
+
+
+
+
+
+<!-- ================= MAIN CONTENT ================= -->
+
+
+<main class="main-content">
+
+
+
+<header class="top-bar">
+
+
+    <button
+        id="mobileMenuBtn"
+        class="icon-btn mobile-only"
+        aria-label="Open navigation">
+
+        ☰
+
+    </button>
+
+
+
+
+    <div class="page-heading">
+
+
+        <h2 id="pageTitle">
+
+            Dashboard
+
+        </h2>
+
+
+        <p>
+
+            Build consistency. Track progress.
+
+        </p>
+
+
+    </div>
+
+
+
+
+
+    <div class="top-actions">
+
+
+        <button
+            id="themeToggle"
+            class="btn btn-secondary">
+
+
+            🌙
+
+            <span id="themeToggleLabel">
+
+                Dark Mode
+
+            </span>
+
+
+        </button>
+
+
+    </div>
+
+
+</header>
+
+
+
+
+
+<!-- ================= DASHBOARD ================= -->
+
+
+<section
+    id="dashboard"
+    class="view-section active">
+
+
+<div class="section-header">
+
+
+    <div>
+
+        <h2>
+            Dashboard
+        </h2>
+
+
+        <p>
+            Your productivity command center
+        </p>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+<div class="kpi-grid">
+
+
+<article class="kpi-card">
+
+<span>
+Today's Completion
+</span>
+
+<strong id="kpiTodayCompletion">
+0%
+</strong>
+
+</article>
+
+
+
+<article class="kpi-card">
+
+<span>
+Weekly Completion
+</span>
+
+<strong id="kpiWeeklyCompletion">
+0%
+</strong>
+
+</article>
+
+
+
+<article class="kpi-card">
+
+<span>
+Monthly Completion
+</span>
+
+<strong id="kpiMonthlyCompletion">
+0%
+</strong>
+
+</article>
+
+
+
+<article class="kpi-card">
+
+<span>
+Current Streak
+</span>
+
+<strong id="kpiCurrentStreak">
+0 days
+</strong>
+
+</article>
+
+
+</div>
+<!-- Remaining KPI Cards -->
+
+<article class="kpi-card">
+
+    <span>
+        Longest Streak
+    </span>
+
+    <strong id="kpiLongestStreak">
+        0 days
+    </strong>
+
+</article>
+
+
+
+<article class="kpi-card">
+
+    <span>
+        Completed Tasks
+    </span>
+
+    <strong id="kpiTotalCompleted">
+        0
+    </strong>
+
+</article>
+
+
+
+<article class="kpi-card">
+
+    <span>
+        Total Habits
+    </span>
+
+    <strong id="kpiTotalHabits">
+        0
+    </strong>
+
+</article>
+
+
+
+<article class="kpi-card">
+
+    <span>
+        Cycle Completion
+    </span>
+
+    <strong id="kpiCompletionRate">
+        0%
+    </strong>
+
+</article>
+
+
+
+</div>
+
+
+
+
+
+<!-- Dashboard Charts -->
+
+
+<div class="dashboard-charts-grid">
+
+
+
+<article class="chart-card">
+
+
+    <header class="chart-header">
+
+        <h3>
+            Weekly Progress
+        </h3>
+
+    </header>
+
+
+
+    <div class="chart-container">
+
+        <canvas 
+            id="dashboardWeeklyChart"
+            aria-label="Weekly progress chart">
+        </canvas>
+
+    </div>
+
+
+</article>
+
+
+
+
+
+<article class="chart-card">
+
+
+    <header class="chart-header">
+
+        <h3>
+            Habit Categories
+        </h3>
+
+    </header>
+
+
+
+    <div class="chart-container">
+
+        <canvas 
+            id="dashboardCategoryChart"
+            aria-label="Habit category chart">
+        </canvas>
+
+
+    </div>
+
+
+</article>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- Quick Actions -->
+
+
+<div class="quick-actions">
+
+
+<button
+    class="btn btn-primary"
+    data-quick-nav="habits">
+
+    ✅ Track Habits
+
+</button>
+
+
+
+
+<button
+    class="btn btn-primary"
+    data-quick-nav="countdowns">
+
+    🎯 Add Goal
+
+</button>
+
+
+
+
+<button
+    class="btn btn-primary"
+    data-quick-nav="todos">
+
+    ☑️ Manage Tasks
+
+</button>
+
+
+
+
+<button
+    class="btn btn-primary"
+    data-quick-nav="analytics">
+
+    📈 View Analytics
+
+</button>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+
+<!-- ================= HABIT TRACKER ================= -->
+
+
+<section
+    id="habits"
+    class="view-section">
+
+
+
+<header class="section-header">
+
+
+<div>
+
+<h2>
+    Habit Tracker
+</h2>
+
+
+<p>
+    Build consistency one day at a time
+</p>
+
+
+</div>
+
+
+
+
+<button
+    id="addHabitBtn"
+    class="btn btn-primary">
+
+    + Add Habit
+
+</button>
+
+
+</header>
+
+
+
+
+
+
+
+<div class="toolbar">
+
+
+<input
+    id="habitSearchInput"
+    class="input"
+    type="search"
+    placeholder="Search habits..."
+    aria-label="Search habits">
+
+
+
+
+
+<select
+    id="habitCategoryFilter"
+    class="input"
+    aria-label="Filter habits">
+
+<option value="all">
+    All Categories
+</option>
+
+
+</select>
+
+
+
+
+
+<label class="weeks-control">
+
+<span>
+Weeks:
+</span>
+
+
+<input
+    id="weeksCountInput"
+    class="input"
+    type="number"
+    min="1"
+    max="52"
+    value="4"
+    aria-label="Number of weeks">
+
+
+</label>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="table-wrapper">
+
+
+<table class="habit-table">
+
+
+<thead id="habitTableHead">
+
+</thead>
+
+
+<tbody id="habitTableBody">
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+
+
+
+<!-- ================= CALENDAR ================= -->
+
+
+<section
+    id="calendar"
+    class="view-section">
+
+
+<header class="section-header">
+
+
+<div>
+
+<h2>
+    Calendar
+</h2>
+
+
+<p>
+    Review your daily performance history
+</p>
+
+
+</div>
+
+
+</header>
+
+
+
+
+
+<div class="calendar-controls">
+
+
+<button
+    id="prevPeriodBtn"
+    class="btn btn-secondary">
+
+← Previous
+
+</button>
+
+
+
+
+<h3 id="calendarCurrentMonthYear">
+
+</h3>
+
+
+
+
+
+<button
+    id="nextPeriodBtn"
+    class="btn btn-secondary">
+
+Next →
+
+</button>
+
+
+
+</div>
+
+
+
+
+
+<div class="calendar-view-toggle">
+
+
+<button
+    class="btn btn-secondary active"
+    data-cal-view="month">
+
+Month
+
+</button>
+
+
+
+<button
+    class="btn btn-secondary"
+    data-cal-view="week">
+
+Week
+
+</button>
+
+
+
+</div>
+
+
+
+
+
+<div class="calendar-layout">
+
+
+<div
+    id="calendarContainer"
+    class="calendar-container">
+
+</div>
+
+
+
+
+
+<aside
+    class="calendar-inspector"
+    aria-label="Selected day details">
+
+
+<h3>
+Day Details
+</h3>
+
+
+<h4 id="inspectorDateTitle">
+
+</h4>
+
+
+
+<section>
+
+<h5>
+Habits
+</h5>
+
+
+<div id="inspectorHabitsList">
+
+</div>
+
+
+</section>
+
+
+
+
+<section>
+
+<h5>
+Tasks
+</h5>
+
+
+<div id="inspectorTodosList">
+
+</div>
+
+
+</section>
+
+
+
+
+<section>
+
+<h5>
+Goals
+</h5>
+
+
+<div id="inspectorGoalsList">
+
+</div>
+
+
+</section>
+
+
+
+</aside>
+
+
+</div>
+
+
+</section>
+<!-- ================= GOALS & COUNTDOWN ================= -->
+
+
+<section
+    id="countdowns"
+    class="view-section">
+
+
+<header class="section-header">
+
+
+<div>
+
+<h2>
+    Goals & Countdown
+</h2>
+
+
+<p>
+    Track milestones and important deadlines
+</p>
+
+
+</div>
+
+
+
+<button
+    id="addCountdownBtn"
+    class="btn btn-primary">
+
++ Add Countdown
+
+</button>
+
+
+</header>
+
+
+
+
+
+<div
+    id="countdownListContainer"
+    class="countdown-grid">
+
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+
+
+
+
+<!-- ================= ANALYTICS ================= -->
+
+
+<section
+    id="analytics"
+    class="view-section">
+
+
+<header class="section-header">
+
+
+<div>
+
+<h2>
+    Analytics
+</h2>
+
+
+<p>
+    Understand your productivity patterns
+</p>
+
+
+</div>
+
+
+
+
+<select
+    id="analyticsTimeframeSelect"
+    class="input"
+    aria-label="Analytics timeframe">
+
+
+<option value="cycle">
+    Current Cycle
+</option>
+
+
+<option value="month">
+    This Month
+</option>
+
+
+<option value="all">
+    All Time
+</option>
+
+
+</select>
+
+
+</header>
+
+
+
+
+
+
+
+<!-- Analytics Summary Cards -->
+
+
+<div class="analytics-stat-grid">
+
+
+
+<article class="kpi-card">
+
+<span>
+Total Check-ins
+</span>
+
+
+<strong id="statTotalHabitsCompleted">
+0
+</strong>
+
+
+</article>
+
+
+
+
+
+<article class="kpi-card">
+
+<span>
+Completion Rate
+</span>
+
+
+<strong id="statCompletionPercentage">
+0%
+</strong>
+
+
+</article>
+
+
+
+
+
+<article class="kpi-card">
+
+<span>
+Average Completion
+</span>
+
+
+<strong id="statAverageCompletion">
+0%
+</strong>
+
+
+</article>
+
+
+
+
+
+<article class="kpi-card">
+
+<span>
+Current Streak
+</span>
+
+
+<strong id="statCurrentStreak">
+0 days
+</strong>
+
+
+</article>
+
+
+
+
+
+<article class="kpi-card">
+
+<span>
+Longest Streak
+</span>
+
+
+<strong id="statLongestStreak">
+0 days
+</strong>
+
+
+</article>
+
+
+
+
+
+<article class="kpi-card">
+
+<span>
+Best Week
+</span>
+
+
+<strong id="statBestWeek">
+-
+</strong>
+
+
+</article>
+
+
+
+
+
+<article class="kpi-card">
+
+<span>
+Best Month
+</span>
+
+
+<strong id="statBestMonth">
+-
+</strong>
+
+
+</article>
+
+
+
+
+
+<article class="kpi-card">
+
+<span>
+Most Successful
+</span>
+
+
+<strong id="statMostSuccessful">
+-
+</strong>
+
+
+</article>
+
+
+
+
+
+<article class="kpi-card">
+
+<span>
+Needs Improvement
+</span>
+
+
+<strong id="statLeastSuccessful">
+-
+</strong>
+
+
+</article>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- Analytics Charts -->
+
+
+<div class="analytics-charts-grid">
+
+
+
+
+
+<article class="chart-card">
+
+
+<h3>
+Daily Completion
+</h3>
+
+
+
+<div class="chart-container">
+
+<canvas id="analyticsDailyChart"></canvas>
+
+</div>
+
+
+</article>
+
+
+
+
+
+
+
+<article class="chart-card">
+
+
+<h3>
+Weekly Trend
+</h3>
+
+
+
+<div class="chart-container">
+
+<canvas id="analyticsWeeklyChart"></canvas>
+
+</div>
+
+
+</article>
+
+
+
+
+
+
+
+<article class="chart-card">
+
+
+<h3>
+Monthly Velocity
+</h3>
+
+
+
+<div class="chart-container">
+
+<canvas id="analyticsMonthlyChart"></canvas>
+
+</div>
+
+
+</article>
+
+
+
+
+
+
+
+<article class="chart-card">
+
+
+<h3>
+Habit Distribution
+</h3>
+
+
+
+<div class="chart-container">
+
+<canvas id="analyticsPieChart"></canvas>
+
+</div>
+
+
+</article>
+
+
+
+
+
+
+
+<article class="chart-card">
+
+
+<h3>
+Task Completion Ratio
+</h3>
+
+
+
+<div class="chart-container">
+
+<canvas id="analyticsDoughnutChart"></canvas>
+
+</div>
+
+
+</article>
+
+
+
+
+
+
+
+<article class="chart-card">
+
+
+<h3>
+Category Balance
+</h3>
+
+
+
+<div class="chart-container">
+
+<canvas id="analyticsRadarChart"></canvas>
+
+</div>
+
+
+</article>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<!-- Contribution Heatmap -->
+
+
+<article class="chart-card heatmap-card">
+
+
+<header class="chart-header">
+
+
+<h3>
+90 Day Contribution Heatmap
+</h3>
+
+
+</header>
+
+
+
+<div
+    id="heatmapContainer"
+    class="heatmap-container">
+
+</div>
+
+
+
+</article>
+
+
+
+</section>
+
+
+
+
+
+
+
+
+<!-- ================= NOTES ================= -->
+
+
+<section
+    id="notes"
+    class="view-section">
+
+
+<header class="section-header">
+
+
+<div>
+
+<h2>
+Notes & Checklists
+</h2>
+
+
+<p>
+Capture ideas, plans and important reminders
+</p>
+
+
+</div>
+
+
+
+
+<button
+    id="addNoteBtn"
+    class="btn btn-primary">
+
++ Add Note
+
+</button>
+
+
+</header>
+
+
+
+
+
+
+
+<div class="filter-tabs">
+
+
+<button
+    class="btn btn-secondary active"
+    data-note-filter="all">
+
+All Notes
+
+</button>
+
+
+
+
+<button
+    class="btn btn-secondary"
+    data-note-filter="pinned">
+
+📌 Pinned
+
+</button>
+
+
+
+
+<button
+    class="btn btn-secondary"
+    data-note-filter="checklist">
+
+☑️ Checklists
+
+</button>
+
+
+
+</div>
+
+
+
+
+
+
+<div
+    id="notesContainer"
+    class="notes-grid">
+
+
+</div>
+
+
+
+
+</section>
+<!-- ================= TASKS ================= -->
+
+
+<section
+    id="todos"
+    class="view-section">
+
+
+<header class="section-header">
+
+
+<div>
+
+<h2>
+    Tasks
+</h2>
+
+
+<p>
+    Organize priorities and daily actions
+</p>
+
+
+</div>
+
+
+
+
+<button
+    id="addTodoBtn"
+    class="btn btn-primary">
+
++ Add Task
+
+</button>
+
+
+</header>
+
+
+
+
+
+
+
+<div class="toolbar">
+
+
+<input
+    id="todoSearchInput"
+    class="input"
+    type="search"
+    placeholder="Search tasks..."
+    aria-label="Search tasks">
+
+
+
+
+
+<select
+    id="todoPriorityFilter"
+    class="input"
+    aria-label="Filter priority">
+
+
+<option value="all">
+    All Priorities
+</option>
+
+
+<option value="high">
+    High
+</option>
+
+
+<option value="medium">
+    Medium
+</option>
+
+
+<option value="low">
+    Low
+</option>
+
+
+</select>
+
+
+
+
+
+
+<select
+    id="todoStatusFilter"
+    class="input"
+    aria-label="Filter status">
+
+
+<option value="all">
+    All Status
+</option>
+
+
+<option value="active">
+    Active
+</option>
+
+
+<option value="completed">
+    Completed
+</option>
+
+
+</select>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div
+    id="todoListContainer"
+    class="todo-list">
+
+
+</div>
+
+
+
+
+</section>
+
+
+
+
+
+
+
+
+
+<!-- ================= ARCHIVE ================= -->
+
+
+<section
+    id="archive"
+    class="view-section">
+
+
+<header class="section-header">
+
+
+<div>
+
+<h2>
+    Archive
+</h2>
+
+
+<p>
+    Review saved productivity snapshots
+</p>
+
+
+</div>
+
+
+
+
+<button
+    id="archiveSessionSecondaryBtn"
+    class="btn btn-primary">
+
+💾 Save Snapshot
+
+</button>
+
+
+</header>
+
+
+
+
+
+
+
+<div
+    id="archiveListContainer"
+    class="archive-grid">
+
+
+</div>
+
+
+
+
+</section>
+
+
+
+
+
+
+
+
+
+<!-- ================= SETTINGS ================= -->
+
+
+<section
+    id="settings"
+    class="view-section">
+
+
+<header class="section-header">
+
+
+<div>
+
+<h2>
+    Settings
+</h2>
+
+
+<p>
+    Customize your LifeTrack experience
+</p>
+
+
+</div>
+
+
+</header>
+
+
+
+
+
+
+
+<div class="settings-grid">
+
+
+
+
+
+<article class="settings-card">
+
+
+<h3>
+Appearance
+</h3>
+
+
+
+
+
+
+<label>
+
+Theme
+
+
+<select
+    id="settingThemeSelect"
+    class="input">
+
+
+<option value="light">
+    Light
+</option>
+
+
+<option value="dark">
+    Dark
+</option>
+
+
+</select>
+
+
+</label>
+
+
+
+
+
+
+
+<label>
+
+Accent Color
+
+
+<input
+    id="settingAccentColor"
+    class="input"
+    type="color"
+    value="#4f46e5">
+
+
+</label>
+
+
+
+
+
+
+
+
+<label>
+
+Font Size
+
+
+<select
+    id="settingFontSize"
+    class="input">
+
+
+<option value="small">
+    Small
+</option>
+
+
+<option value="medium">
+    Medium
+</option>
+
+
+<option value="large">
+    Large
+</option>
+
+
+</select>
+
+
+</label>
+
+
+
+
+
+
+
+<label>
+
+First Day Of Week
+
+
+<select
+    id="settingFirstDayOfWeek"
+    class="input">
+
+
+<option value="monday">
+    Monday
+</option>
+
+
+<option value="sunday">
+    Sunday
+</option>
+
+
+</select>
+
+
+</label>
+
+
+
+</article>
+
+
+
+
+
+
+
+
+
+<article class="settings-card">
+
+
+<h3>
+Data Management
+</h3>
+
+
+
+
+<button
+    id="exportJsonBtn"
+    class="btn btn-secondary">
+
+Export JSON
+
+</button>
+
+
+
+
+
+<button
+    id="exportCsvBtn"
+    class="btn btn-secondary">
+
+Export CSV
+
+</button>
+
+
+
+
+
+<button
+    id="exportPdfBtn"
+    class="btn btn-secondary">
+
+Export PDF Report
+
+</button>
+
+
+
+
+
+<label
+    class="btn btn-secondary"
+    for="importJsonInput">
+
+Import JSON
+
+</label>
+
+
+<input
+    id="importJsonInput"
+    type="file"
+    accept=".json"
+    hidden>
+
+
+
+
+
+<button
+    id="resetDataBtn"
+    class="btn btn-danger">
+
+Reset All Data
+
+</button>
+
+
+</article>
+
+
+
+
+</div>
+
+
+
+</section>
+<!-- ================= MODALS ================= -->
+
+
+<!-- Habit Modal -->
+
+<div
+    id="habitModal"
+    class="modal"
+    hidden>
+
+
+<div class="modal-content">
+
+
+<button
+    class="modal-close-btn"
+    aria-label="Close">
+
+×
+
+</button>
+
+
+
+<h2>
+Add New Habit
+</h2>
+
+
+
+
+
+<form id="habitForm">
+
+
+<input
+    id="habitNameInput"
+    class="input"
+    placeholder="Habit name"
+    autocomplete="off"
+    required>
+
+
+
+
+<input
+    id="habitCategoryInput"
+    class="input"
+    placeholder="Category (Study, Health...)"
+    autocomplete="off">
+
+
+
+
+
+<label>
+
+Color
+
+
+<input
+    id="habitColorInput"
+    class="input"
+    type="color"
+    value="#4f46e5">
+
+
+</label>
+
+
+
+
+
+
+<button
+    class="btn btn-primary"
+    type="submit">
+
+Save Habit
+
+</button>
+
+
+
+</form>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- Countdown Modal -->
+
+
+<div
+    id="countdownModal"
+    class="modal"
+    hidden>
+
+
+<div class="modal-content">
+
+
+<button
+    class="modal-close-btn"
+    aria-label="Close">
+
+×
+
+</button>
+
+
+
+
+<h2>
+Create Goal Countdown
+</h2>
+
+
+
+
+
+
+
+<form id="countdownForm">
+
+
+
+
+
+<input
+    id="countdownTitleInput"
+    class="input"
+    placeholder="Goal title"
+    required>
+
+
+
+
+
+
+
+<textarea
+    id="countdownDescInput"
+    class="input"
+    placeholder="Description"></textarea>
+
+
+
+
+
+
+
+<input
+    id="countdownCategoryInput"
+    class="input"
+    placeholder="Category">
+
+
+
+
+<input
+    id="countdownDateInput"
+    class="input"
+    type="date"
+    required>
+
+
+
+
+
+
+<input
+    id="countdownTimeInput"
+    class="input"
+    type="time">
+
+
+
+
+
+
+
+
+<select
+    id="countdownPriorityInput"
+    class="input">
+
+
+<option value="high">
+High
+</option>
+
+
+<option
+    value="medium"
+    selected>
+
+Medium
+
+</option>
+
+
+<option value="low">
+
+Low
+
+</option>
+
+
+</select>
+
+
+
+
+
+
+
+<input
+    id="countdownColorInput"
+    class="input"
+    type="color"
+    value="#4f46e5">
+
+
+
+
+
+
+
+<button
+    class="btn btn-primary"
+    type="submit">
+
+Create Countdown
+
+</button>
+
+
+
+
+</form>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- Notes Modal -->
+
+
+<div
+    id="noteModal"
+    class="modal"
+    hidden>
+
+
+<div class="modal-content">
+
+
+<button
+    class="modal-close-btn"
+    aria-label="Close">
+
+×
+
+</button>
+
+
+
+
+<h2>
+Create Note
+</h2>
+
+
+
+
+
+
+<form id="noteForm">
+
+
+
+
+
+<input
+    id="noteTitleInput"
+    class="input"
+    placeholder="Note title"
+    required>
+
+
+
+
+
+
+
+<textarea
+    id="noteContentInput"
+    class="input"
+    placeholder="Write note or checklist items..."></textarea>
+
+
+
+
+
+
+
+
+<label>
+
+
+<input
+    id="notePinnedInput"
+    type="checkbox">
+
+
+Pin this note
+
+
+</label>
+
+
+
+
+
+
+
+
+<label>
+
+
+<input
+    id="noteIsChecklistInput"
+    type="checkbox">
+
+
+Create checklist
+
+
+</label>
+
+
+
+
+
+
+
+<button
+    class="btn btn-primary"
+    type="submit">
+
+Save Note
+
+</button>
+
+
+
+</form>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- Todo Modal -->
+
+
+<div
+    id="todoModal"
+    class="modal"
+    hidden>
+
+
+<div class="modal-content">
+
+
+<button
+    class="modal-close-btn"
+    aria-label="Close">
+
+×
+
+</button>
+
+
+
+
+<h2>
+Add Task
+</h2>
+
+
+
+
+
+
+<form id="todoForm">
+
+
+
+
+
+<input
+    id="todoTextInput"
+    class="input"
+    placeholder="Task description"
+    required>
+
+
+
+
+
+
+
+<select
+    id="todoPriorityInput"
+    class="input">
+
+
+<option value="high">
+High
+</option>
+
+
+<option value="medium" selected>
+Medium
+</option>
+
+
+<option value="low">
+Low
+</option>
+
+
+</select>
+
+
+
+
+
+
+
+<input
+    id="todoDueDateInput"
+    class="input"
+    type="date">
+
+
+
+
+
+
+<button
+    class="btn btn-primary"
+    type="submit">
+
+Add Task
+
+</button>
+
+
+
+
+</form>
+
+
+
+
+</div>
+
+
+</div>
+<!-- Confirm Modal -->
+
+
+<div
+    id="confirmModal"
+    class="modal"
+    hidden>
+
+
+<div class="modal-content">
+
+
+<button
+    class="modal-close-btn"
+    aria-label="Close">
+
+×
+
+</button>
+
+
+
+
+<h2>
+Confirm Action
+</h2>
+
+
+
+
+
+<p id="confirmModalMessage">
+
+Are you sure you want to continue?
+
+</p>
+
+
+
+
+
+
+<div class="modal-actions">
+
+
+<button
+    id="confirmModalCancelBtn"
+    class="btn btn-secondary">
+
+Cancel
+
+</button>
+
+
+
+
+<button
+    id="confirmModalProceedBtn"
+    class="btn btn-danger">
+
+Confirm
+
+</button>
+
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+</main>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- ================= APPLICATION SCRIPT ================= -->
+
+
+<script src="app.js"></script>
+
+
+
+
+
+<script>
+
+
+/*
+    LifeTrack Bootstrap
+
+    Starts the application after
+    the document is fully loaded.
+*/
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+
+        if (window.lifeTrackApp) {
+
+            return;
+
+        }
+
+
+
+        window.lifeTrackApp =
+            new AppController();
+
+
+
+        window.lifeTrackApp.init();
+
+
+
+        const loader =
+            document.getElementById(
+                "appLoader"
+            );
+
+
+
+        if (loader) {
+
+            loader.style.opacity = "0";
+
+
+            setTimeout(
+                () => {
+
+                    loader.remove();
+
+                },
+                300
+            );
+
+        }
+
+
+
+    }
+);
+
+
+</script>
+
+
+
+
+
+
+</body>
+
+
+</html>
