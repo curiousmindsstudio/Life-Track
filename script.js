@@ -2976,14 +2976,11 @@ function(){
         );
 
 
-
-
-
     chartManager.create(
         "dashboardWeeklyChart",
         {
 
-            type:"line",
+            type:"bar",
 
 
             data:{
@@ -3002,11 +2999,9 @@ function(){
                     values,
 
 
-                    borderColor: "#4f46e5",
-                    backgroundColor: "rgba(79, 70, 229, 0.1)",
-                    fill: true,
-                    tension: 0.3,
-                    borderWidth:2
+                    backgroundColor: "#4f46e5",
+                    borderRadius: 6,
+                    borderWidth: 0
 
 
                 }]
@@ -3021,10 +3016,21 @@ function(){
 
                 maintainAspectRatio:false,
 
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+
                 scales: {
                     y: {
                         beginAtZero: true,
                         max: 100
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
                     }
                 }
 
@@ -3035,6 +3041,10 @@ function(){
         }
 
     );
+
+
+
+    
 
     // Category Distribution Doughnut Chart
     const habits = habitEngine.getHabits();
