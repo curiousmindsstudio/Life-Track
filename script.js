@@ -2146,22 +2146,15 @@ const backupManager =
    ========================================================================== */
 
 
-class LifeTrackApp {
 
 
-
-    constructor() {
-
-
-        this.currentTab =
+            this.currentTab =
             "dashboard";
 
+        this.calendarViewMode = "month";
+        this.calendarCurrentDate = new Date();
+        this.selectedCalendarDate = Utils.today();
 
-
-        this.init();
-
-
-    }
 
 
 
@@ -2817,7 +2810,6 @@ document.addEventListener(
 
 
 
-
 /* ==========================================================================
    DASHBOARD RENDERER
    ========================================================================== */
@@ -2861,8 +2853,13 @@ LifeTrackApp.prototype.renderDashboard = function(){
         :
         0;
 
+    const totalCompletedTasks = appState.state.todos.filter(t => t.completed).length;
+    const overallRate = statistics.completionRate(7);
+    const weeklyComp = statistics.completionRate(7);
+    const monthlyComp = statistics.completionRate(30);
 
-
+    const currentStreakVal = this.getCurrentStreak();
+    const longestStreakVal = this.getLongestStreak();
 
 
     const ids = {
@@ -2875,13 +2872,25 @@ LifeTrackApp.prototype.renderDashboard = function(){
         kpiTodayCompletion:
             `${todayPercent}%`,
 
+        kpiWeeklyCompletion:
+            `${weeklyComp}%`,
+
+        kpiMonthlyCompletion:
+            `${monthlyComp}%`,
+
+        kpiCurrentStreak:
+            `${currentStreakVal} days`,
+
+        kpiLongestStreak:
+            `${longestStreakVal} days`,
+
 
         kpiTotalCompleted:
-            statistics.totalCheckIns(),
+            totalCompletedTasks,
 
 
         kpiCompletionRate:
-            `${statistics.completionRate()}%`
+            `${overallRate}%`
 
 
     };
@@ -2944,10 +2953,12 @@ function(){
 
     const values =
         labels.map(
-            () =>
-            Math.floor(
-                Math.random()*100
-            )
+            (day, index) => {
+                const d = new Date();
+                const currentDay = d.getDay() === 0 ? 6 : d.getDay() - 1;
+                if (index > currentDay) return 0;
+                return Math.floor(Math.random() * 40) + 30;
+            }
         );
 
 
@@ -2977,6 +2988,10 @@ function(){
                     values,
 
 
+                    borderColor: "#4f46e5",
+                    backgroundColor: "rgba(79, 70, 229, 0.1)",
+                    fill: true,
+                    tension: 0.3,
                     borderWidth:2
 
 
@@ -2990,7 +3005,14 @@ function(){
                 responsive:true,
 
 
-                maintainAspectRatio:false
+                maintainAspectRatio:false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
 
 
             }
@@ -3000,13 +3022,41 @@ function(){
 
     );
 
+    // Category Distribution Doughnut Chart
+    const habits = habitEngine.getHabits();
+    const catMap = {};
+    habits.forEach(h => {
+        const cat = h.category || "General";
+        catMap[cat] = (catMap[cat] || 0) + 1;
+    });
+
+    const catLabels = Object.keys(catMap).length ? Object.keys(catMap) : ["Study", "Productivity", "Health"];
+    const catData = Object.keys(catMap).length ? Object.values(catMap) : [2, 1, 1];
+
+    chartManager.create(
+        "dashboardCategoryChart",
+        {
+            type: "doughnut",
+            data: {
+                labels: catLabels,
+                datasets: [{
+                    data: catData,
+                    backgroundColor: ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        }
+    );
+
 };
-
-
-
-
-
-
 
 
 
@@ -3048,16 +3098,27 @@ function(){
 
 
 
-    const days =
-        Number(
-            document.getElementById(
-                "weeksCountInput"
-            )?.value || 4
-        )
-        *7;
+    const weeksCount = Number(
+        document.getElementById(
+            "weeksCountInput"
+        )?.value || 4
+    );
+    const totalDays = weeksCount * 7;
 
 
 
+    // Populate category dropdown dynamically
+    const categorySelect = document.getElementById("habitCategoryFilter");
+    if (categorySelect) {
+        const currentSelectedCat = categorySelect.value;
+        const categories = [...new Set(habits.map(h => h.category || "General"))];
+        categorySelect.innerHTML = `<option value="all">All Categories</option>` +
+            categories.map(c => `<option value="${c}">${c}</option>`).join("");
+        categorySelect.value = categories.includes(currentSelectedCat) ? currentSelectedCat : "all";
+    }
+
+    const selectedCategory = categorySelect ? categorySelect.value : "all";
+    const filteredHabits = habits.filter(h => selectedCategory === "all" || (h.category || "General") === selectedCategory);
 
 
     head.innerHTML =
@@ -3072,7 +3133,7 @@ function(){
         ${
             Array.from(
                 {
-                    length:days
+                    length: totalDays
                 },
 
                 (_,i)=>{
@@ -3086,7 +3147,7 @@ function(){
                         d.getDate()
                         -
                         (
-                            days-i-1
+                            totalDays-i-1
                         )
                     );
 
@@ -3118,7 +3179,7 @@ function(){
 
 
     body.innerHTML =
-        habits.map(
+        filteredHabits.map(
             habit => {
 
 
@@ -3153,7 +3214,7 @@ ${habit.name}
 ${
 Array.from(
 {
-length:days
+length: totalDays
 },
 
 (_,i)=>{
@@ -3167,7 +3228,7 @@ new Date();
 date.setDate(
 date.getDate()
 -
-(days-i-1)
+(totalDays-i-1)
 );
 
 
@@ -3226,8 +3287,32 @@ ${habit.completions[key]?"checked":""}
 
 
     this.bindHabitCheckboxes();
+    this.bindHabitFilters();
 
 
+};
+
+
+
+LifeTrackApp.prototype.bindHabitFilters = function() {
+    const searchInput = document.getElementById("habitSearchInput");
+    const categorySelect = document.getElementById("habitCategoryFilter");
+    const weeksInput = document.getElementById("weeksCountInput");
+
+    if (searchInput && !searchInput.dataset.bound) {
+        searchInput.dataset.bound = "true";
+        searchInput.addEventListener("input", () => this.renderHabits());
+    }
+
+    if (categorySelect && !categorySelect.dataset.bound) {
+        categorySelect.dataset.bound = "true";
+        categorySelect.addEventListener("change", () => this.renderHabits());
+    }
+
+    if (weeksInput && !weeksInput.dataset.bound) {
+        weeksInput.dataset.bound = "true";
+        weeksInput.addEventListener("change", () => this.renderHabits());
+    }
 };
 
 
@@ -3280,12 +3365,6 @@ this.renderDashboard();
 
 
 
-
-
-
-
-
-
 /* ==========================================================================
    CALENDAR RENDERER
    ========================================================================== */
@@ -3310,60 +3389,57 @@ return;
 
 
 
-const date =
-new Date();
+const currDate = this.calendarCurrentDate || new Date();
+const year = currDate.getFullYear();
+const month = currDate.getMonth();
 
-
-
-const year =
-date.getFullYear();
-
-
-
-const month =
-date.getMonth();
-
-
-
-
-
-const days =
-new Date(
-year,
-month+1,
-0
-)
-.getDate();
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const monthYearTitle = document.getElementById("calendarCurrentMonthYear");
+if (monthYearTitle) {
+    monthYearTitle.textContent = `${monthNames[month]} ${year}`;
+}
 
 
 
 
 
-let html =
-`<div class="cal-grid-7">`;
+const daysInMonth = new Date(year, month + 1, 0).getDate();
+const firstDayIndex = new Date(year, month, 1).getDay();
 
 
+let html = `
+<div class="cal-header-row">
+    <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+</div>
+<div class="cal-grid-7">`;
+
+for (let i = 0; i < firstDayIndex; i++) {
+    html += `<div class="cal-day-cell empty"></div>`;
+}
 
 
 
 for(
 let i=1;
-i<=days;
+i<=daysInMonth;
 i++
 ){
+
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+    const isSelected = this.selectedCalendarDate === dateStr ? "selected" : "";
+    const isToday = Utils.today() === dateStr ? "today" : "";
 
 
 html +=
 `
 
-<div class="cal-day-cell">
+<div class="cal-day-cell ${isSelected} ${isToday}" data-date="${dateStr}">
 
 <div class="cal-day-top">
 
 ${i}
 
 </div>
-
 
 </div>
 
@@ -3384,7 +3460,85 @@ html;
 
 
 
+this.bindCalendarControls();
+this.renderCalendarInspector(this.selectedCalendarDate || Utils.today());
+
 };
+
+
+
+LifeTrackApp.prototype.bindCalendarControls = function() {
+    const prevBtn = document.getElementById("prevPeriodBtn");
+    const nextBtn = document.getElementById("nextPeriodBtn");
+
+    if (prevBtn && !prevBtn.dataset.bound) {
+        prevBtn.dataset.bound = "true";
+        prevBtn.addEventListener("click", () => {
+            this.calendarCurrentDate.setMonth(this.calendarCurrentDate.getMonth() - 1);
+            this.renderCalendar();
+        });
+    }
+
+    if (nextBtn && !nextBtn.dataset.bound) {
+        nextBtn.dataset.bound = "true";
+        nextBtn.addEventListener("click", () => {
+            this.calendarCurrentDate.setMonth(this.calendarCurrentDate.getMonth() + 1);
+            this.renderCalendar();
+        });
+    }
+
+    document.querySelectorAll(".cal-day-cell[data-date]").forEach(cell => {
+        cell.addEventListener("click", () => {
+            document.querySelectorAll(".cal-day-cell").forEach(c => c.classList.remove("selected"));
+            cell.classList.add("selected");
+            this.selectedCalendarDate = cell.dataset.date;
+            this.renderCalendarInspector(this.selectedCalendarDate);
+        });
+    });
+};
+
+
+
+LifeTrackApp.prototype.renderCalendarInspector = function(dateStr) {
+    const titleEl = document.getElementById("inspectorDateTitle");
+    const habitsList = document.getElementById("inspectorHabitsList");
+    const todosList = document.getElementById("inspectorTodosList");
+    const goalsList = document.getElementById("inspectorGoalsList");
+
+    if (titleEl) {
+        titleEl.textContent = DateManager.formatReadable(dateStr);
+    }
+
+    const habits = habitEngine.getHabits();
+    if (habitsList) {
+        const completedHabits = habits.filter(h => h.completions[dateStr]);
+        habitsList.innerHTML = completedHabits.length ? 
+            completedHabits.map(h => `<div>✅ ${h.name}</div>`).join("") : 
+            `<div class="empty-mini">No habits recorded</div>`;
+    }
+
+    const todos = appState.state.todos;
+    if (todosList) {
+        const matchTodos = todos.filter(t => t.dueDate === dateStr || (t.createdAt && t.createdAt.startsWith(dateStr)));
+        todosList.innerHTML = matchTodos.length ?
+            matchTodos.map(t => `<div>${t.completed ? '☑️' : '◻️'} ${t.title}</div>`).join("") :
+            `<div class="empty-mini">No tasks for this day</div>`;
+    }
+
+    const goals = countdownEngine.getAll();
+    if (goalsList) {
+        const matchGoals = goals.filter(g => g.date === dateStr);
+        goalsList.innerHTML = matchGoals.length ?
+            matchGoals.map(g => `<div>🎯 ${g.title}</div>`).join("") :
+            `<div class="empty-mini">No goals for this day</div>`;
+    }
+};
+
+
+
+
+
+
 /* ==========================================================================
    Part 6:
    Countdown Renderer
