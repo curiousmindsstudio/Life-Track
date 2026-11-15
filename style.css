@@ -3265,5 +3265,29 @@ textarea {
 
 
 /* ==========================================================================
+   KPI CARD COLORFUL ACCENTS
+   ========================================================================== */
+
+.kpi-card {
+    border-top: 4px solid var(--accent);
+}
+
+.kpi-card:nth-child(2),
+.kpi-card:nth-child(6) {
+    border-top-color: #10b981; /* Success Green */
+}
+
+.kpi-card:nth-child(3),
+.kpi-card:nth-child(7) {
+    border-top-color: #f59e0b; /* Warning Orange */
+}
+
+.kpi-card:nth-child(4),
+.kpi-card:nth-child(8) {
+    border-top-color: #8b5cf6; /* Purple Accent */
+}
+
+
+/* ==========================================================================
    END OF LIFETRACK STYLE SYSTEM
    ========================================================================== */
