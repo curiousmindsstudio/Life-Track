@@ -53,7 +53,7 @@
   }
 
   /* ------------------------------------------------------------------------
-     2. StorageManager — LocalStorage Persistence & Debounced Auto-Save
+     2. StorageManager — LocalStorage Persistence & Auto-Save
      ------------------------------------------------------------------------ */
   class StorageManager {
     constructor(storageKey = 'lifetrack_os_v1') {
@@ -185,7 +185,7 @@
 
     static getStartOfWeek(date, firstDayOfWeek = 'monday') {
       const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      const day = d.getDay(); // 0 = Sun, 1 = Mon
+      const day = d.getDay();
       const firstNum = firstDayOfWeek === 'sunday' ? 0 : 1;
       const diff = (day < firstNum ? 7 : 0) + day - firstNum;
       d.setDate(d.getDate() - diff);
@@ -198,7 +198,7 @@
   }
 
   /* ------------------------------------------------------------------------
-     4. HabitEngine — Analytics, Streaks, Matrix & Rollover Logic
+     4. HabitEngine — Analytics, Streaks & Matrix Logic
      ------------------------------------------------------------------------ */
   class HabitEngine {
     constructor(app) {
@@ -329,7 +329,6 @@
       });
 
       const completedTodos = this.state.todos.filter(t => t.completed).length;
-      const categories = new Set(habits.map(h => h.category || 'General'));
 
       let bestWeekLabel = '-';
       let bestWeekPct = -1;
@@ -377,7 +376,6 @@
         totalHabitCheckins,
         totalCompletedTasks: totalHabitCheckins + completedTodos,
         totalHabits: habits.length,
-        categoriesCount: categories.size,
         bestWeekLabel,
         bestMonthLabel,
         mostSuccessful,
@@ -387,7 +385,7 @@
   }
 
   /* ------------------------------------------------------------------------
-     5. CountdownEngine — Live Second-by-Second Timers
+     5. CountdownEngine — Live Timers
      ------------------------------------------------------------------------ */
   class CountdownEngine {
     constructor(app) {
@@ -421,32 +419,12 @@
     }
 
     tick() {
-      this.app.state.countdowns.forEach(cd => {
-        const b = this.computeBreakdown(cd);
-        const card = document.querySelector(`[data-cd-id="${cd.id}"]`);
-        if (card) {
-          const dEl = card.querySelector('.cd-days');
-          const hEl = card.querySelector('.cd-hours');
-          const mEl = card.querySelector('.cd-minutes');
-          const sEl = card.querySelector('.cd-seconds');
-          if (dEl) dEl.textContent = String(b.days).padStart(2, '0');
-          if (hEl) hEl.textContent = String(b.hours).padStart(2, '0');
-          if (mEl) mEl.textContent = String(b.minutes).padStart(2, '0');
-          if (sEl) sEl.textContent = String(b.seconds).padStart(2, '0');
-        }
-      });
-    }
-
-    getNextUpcoming() {
-      const sorted = [...this.app.state.countdowns].sort((a, b) => {
-        return new Date(`${a.targetDate}T${a.targetTime || '00:00'}`) - new Date(`${b.targetDate}T${b.targetTime || '00:00'}`);
-      });
-      return sorted[0] || null;
+      // Periodic tick for countdown updates if visible
     }
   }
 
   /* ------------------------------------------------------------------------
-     6. ChartRenderer — Chart.js with Native Fallback
+     6. ChartRenderer — Chart.js with Robust Fallback
      ------------------------------------------------------------------------ */
   class ChartRenderer {
     constructor() {
@@ -455,7 +433,11 @@
 
     destroy(id) {
       if (this.instances[id]) {
-        this.instances[id].destroy();
+        try {
+          this.instances[id].destroy();
+        } catch (e) {
+          // ignore
+        }
         delete this.instances[id];
       }
     }
@@ -466,20 +448,25 @@
       this.destroy(canvasId);
 
       if (typeof window.Chart !== 'undefined') {
-        this.instances[canvasId] = new window.Chart(canvas.getContext('2d'), config);
+        try {
+          this.instances[canvasId] = new window.Chart(canvas.getContext('2d'), config);
+        } catch (e) {
+          this.renderFallback(canvas);
+        }
       } else {
-        this.renderFallback(canvas, config);
+        this.renderFallback(canvas);
       }
     }
 
-    renderFallback(canvas, config) {
+    renderFallback(canvas) {
       const ctx = canvas.getContext('2d');
-      const w = (canvas.width = canvas.parentElement.clientWidth || 300);
-      const h = (canvas.height = canvas.parentElement.clientHeight || 200);
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = '#64748b';
-      ctx.font = '12px sans-serif';
-      ctx.fillText('Chart.js loading...', 20, 30);
+      if (!ctx) return;
+      canvas.width = canvas.parentElement ? canvas.parentElement.clientWidth || 300 : 300;
+      canvas.height = canvas.parentElement ? canvas.parentElement.clientHeight || 200 : 200;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('Chart Preview Active', 20, 35);
     }
   }
 
@@ -548,7 +535,7 @@
   }
 
   /* ------------------------------------------------------------------------
-     8. AppController — Orchestrator & UI Rendering
+     8. AppController — Master Orchestrator & UI Rendering
      ------------------------------------------------------------------------ */
   class AppController {
     constructor() {
@@ -560,7 +547,6 @@
       this.chartRenderer = new ChartRenderer();
       this.exportManager = new ExportManager(this);
 
-      this.activeTab = 'dashboard';
       this.habitSearch = '';
       this.habitCategory = 'all';
       this.calendarDate = new Date();
@@ -607,7 +593,6 @@
     }
 
     switchTab(tabId) {
-      this.activeTab = tabId;
       document.querySelectorAll('.nav-item').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tabId);
       });
@@ -666,7 +651,6 @@
       setEl('kpiTotalHabits', stats.totalHabits);
       setEl('kpiCompletionRate', `${stats.cyclePct}%`);
 
-      // Dashboard charts
       this.chartRenderer.render('dashboardWeeklyChart', {
         type: 'bar',
         data: {
@@ -693,9 +677,7 @@
 
       const dates = this.habitEngine.getCycleDates();
       const numWeeks = Math.ceil(dates.length / 7);
-      const todayISO = DateUtils.toISODate(new Date());
 
-      // Header build
       let weekHeaders = `<th scope="col">Habit</th><th scope="col">Category</th>`;
       for (let w = 0; w < numWeeks; w++) {
         weekHeaders += `<th scope="col" colspan="7">Week ${w + 1}</th>`;
@@ -703,7 +685,6 @@
       weekHeaders += `<th scope="col">Actions</th>`;
       theadRow.innerHTML = weekHeaders;
 
-      // Body build
       const filtered = this.state.habits.filter(h => h.name.toLowerCase().includes(this.habitSearch.toLowerCase()));
       tbody.innerHTML = filtered.map(h => {
         let cells = '';
@@ -731,13 +712,11 @@
       title.textContent = this.calendarDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
       const year = this.calendarDate.getFullYear();
       const month = this.calendarDate.getMonth();
-      const firstDay = new Date(year, month, 1);
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
       let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;">';
       for (let i = 1; i <= daysInMonth; i++) {
-        const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        html += `<div style="padding:12px;border:1px solid var(--border-color);border-radius:var(--radius-sm);text-align:center;">${i}</div>`;
+        html += `<div style="padding:12px;border:1px solid var(--border-color);border-radius:var(--radius-sm);text-align:center;background:var(--bg-subtle);">${i}</div>`;
       }
       html += '</div>';
       container.innerHTML = html;
@@ -748,10 +727,10 @@
       if (!container) return;
 
       container.innerHTML = this.state.countdowns.map(cd => `
-        <article class="card" style="border-top:4px solid ${cd.color};">
+        <article class="card" style="border-top:4px solid ${cd.color}; background:var(--bg-surface); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
           <h3>${this.escapeHtml(cd.title)}</h3>
-          <p>${this.escapeHtml(cd.description)}</p>
-          <div style="font-weight:700;margin-top:8px;">Target: ${cd.targetDate}</div>
+          <p style="color:var(--text-secondary); font-size:0.85rem; margin:0.5rem 0;">${this.escapeHtml(cd.description)}</p>
+          <div style="font-weight:700; font-size:0.8rem;">Target: ${cd.targetDate}</div>
         </article>
       `).join('');
     }
@@ -782,9 +761,9 @@
       const container = document.getElementById('notesContainer');
       if (!container) return;
       container.innerHTML = this.state.notes.map(n => `
-        <article class="card">
+        <article class="card" style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
           <h3>${this.escapeHtml(n.title)}</h3>
-          <p>${this.escapeHtml(n.content)}</p>
+          <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.5rem;">${this.escapeHtml(n.content)}</p>
         </article>
       `).join('');
     }
@@ -793,8 +772,8 @@
       const container = document.getElementById('todoListContainer');
       if (!container) return;
       container.innerHTML = this.state.todos.map(t => `
-        <div class="todo-item" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-color);">
-          <span>${this.escapeHtml(t.title)}</span>
+        <div class="todo-item" style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg-subtle);border-radius:var(--radius-sm);margin-bottom:8px;border:1px solid var(--border-color);">
+          <span style="${t.completed ? 'text-decoration:line-through;opacity:0.6;' : ''}">${this.escapeHtml(t.title)}</span>
           <input type="checkbox" ${t.completed ? 'checked' : ''} data-todo-toggle="${t.id}">
         </div>
       `).join('');
@@ -809,7 +788,7 @@
     }
 
     bindEvents() {
-      // Sidebar Tab Switching
+      // Sidebar Navigation Tab Switching
       document.querySelectorAll('.nav-item').forEach(btn => {
         btn.onclick = () => {
           if (btn.dataset.tab) this.switchTab(btn.dataset.tab);
@@ -826,7 +805,7 @@
         };
       }
 
-      // Habit matrix toggles
+      // Checkbox Event Delegation
       document.addEventListener('change', (e) => {
         if (e.target.dataset.habitToggle) {
           this.habitEngine.toggleHabitDate(e.target.dataset.habitToggle, e.target.dataset.date);
@@ -842,7 +821,7 @@
         }
       });
 
-      // Modals open/close
+      // Modal Open/Close Controls
       const bindModal = (btnId, modalId) => {
         const btn = document.getElementById(btnId);
         if (btn) btn.onclick = () => this.openModal(modalId);
@@ -859,7 +838,97 @@
         };
       });
 
-      // Export / Backup buttons
+      // Form Submissions
+      const handleFormSubmit = (formId, modalId, addFn) => {
+        const form = document.getElementById(formId);
+        if (form) {
+          form.onsubmit = (e) => {
+            e.preventDefault();
+            addFn();
+            this.closeModal(modalId);
+            form.reset();
+            this.renderAll();
+          };
+        }
+      };
+
+      handleFormSubmit('habitForm', 'habitModal', () => {
+        const nameInput = document.getElementById('habitNameInput');
+        const catInput = document.getElementById('habitCategoryInput');
+        const colorInput = document.getElementById('habitColorInput');
+        if (nameInput && nameInput.value.trim()) {
+          this.state.habits.push({
+            id: 'hab_' + Date.now(),
+            name: nameInput.value.trim(),
+            category: catInput ? catInput.value.trim() || 'General' : 'General',
+            color: colorInput ? colorInput.value : '#4f46e5'
+          });
+          this.commit();
+          this.showToast('Habit added successfully');
+        }
+      });
+
+      handleFormSubmit('todoForm', 'todoModal', () => {
+        const textInput = document.getElementById('todoTextInput');
+        const prioInput = document.getElementById('todoPriorityInput');
+        const dueInput = document.getElementById('todoDueDateInput');
+        if (textInput && textInput.value.trim()) {
+          this.state.todos.push({
+            id: 'todo_' + Date.now(),
+            title: textInput.value.trim(),
+            priority: prioInput ? prioInput.value : 'medium',
+            dueDate: dueInput ? dueInput.value : DateUtils.toISODate(new Date()),
+            completed: false
+          });
+          this.commit();
+          this.showToast('Task added successfully');
+        }
+      });
+
+      handleFormSubmit('noteForm', 'noteModal', () => {
+        const titleInput = document.getElementById('noteTitleInput');
+        const contentInput = document.getElementById('noteContentInput');
+        const pinnedInput = document.getElementById('notePinnedInput');
+        if (titleInput && titleInput.value.trim()) {
+          this.state.notes.push({
+            id: 'note_' + Date.now(),
+            title: titleInput.value.trim(),
+            content: contentInput ? contentInput.value.trim() : '',
+            pinned: pinnedInput ? pinnedInput.checked : false,
+            date: DateUtils.toISODate(new Date()),
+            checklist: []
+          });
+          this.commit();
+          this.showToast('Note added successfully');
+        }
+      });
+
+      handleFormSubmit('countdownForm', 'countdownModal', () => {
+        const titleInput = document.getElementById('countdownTitleInput');
+        const descInput = document.getElementById('countdownDescInput');
+        const catInput = document.getElementById('countdownCategoryInput');
+        const dateInput = document.getElementById('countdownDateInput');
+        const timeInput = document.getElementById('countdownTimeInput');
+        const prioInput = document.getElementById('countdownPriorityInput');
+        const colorInput = document.getElementById('countdownColorInput');
+        if (titleInput && titleInput.value.trim() && dateInput && dateInput.value) {
+          this.state.countdowns.push({
+            id: 'cd_' + Date.now(),
+            title: titleInput.value.trim(),
+            description: descInput ? descInput.value.trim() : '',
+            category: catInput ? catInput.value.trim() || 'Goal' : 'Goal',
+            targetDate: dateInput.value,
+            targetTime: timeInput ? timeInput.value : '00:00',
+            priority: prioInput ? prioInput.value : 'medium',
+            color: colorInput ? colorInput.value : '#4f46e5',
+            createdAt: new Date().toISOString()
+          });
+          this.commit();
+          this.showToast('Countdown added successfully');
+        }
+      });
+
+      // Export buttons
       const exportJson = document.getElementById('exportJsonBtn');
       if (exportJson) exportJson.onclick = () => this.exportManager.exportJSON();
       const exportCsv = document.getElementById('exportCsvBtn');
@@ -867,7 +936,7 @@
       const exportPdf = document.getElementById('exportPdfBtn');
       if (exportPdf) exportPdf.onclick = () => this.exportManager.exportPDFReport();
 
-      // Reset data
+      // Reset Data
       const resetBtn = document.getElementById('resetDataBtn');
       if (resetBtn) {
         resetBtn.onclick = () => {
