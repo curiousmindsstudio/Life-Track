@@ -2138,7 +2138,6 @@ const backupManager =
 
 
 
-
 /* ==========================================================================
    MAIN APPLICATION CONTROLLER
    ========================================================================== */
@@ -2153,6 +2152,9 @@ class LifeTrackApp {
 
         this.currentTab =
             "dashboard";
+
+
+
 
         this.calendarViewMode = "month";
         this.calendarCurrentDate = new Date();
