@@ -1,615 +1,154 @@
 /* ==========================================================================
-   LifeTrack Service Worker
-
-   Part 1:
-   Setup + Cache Installation
-
+   LifeTrack Service Worker — Complete & Unified
    ========================================================================== */
-
 
 "use strict";
 
+const CACHE_NAME = "lifetrack-cache-v1";
+const APP_VERSION = "2.0.0";
 
-
-/* ==========================
-   CACHE CONFIGURATION
-   ========================== */
-
-
-const CACHE_NAME =
-    "lifetrack-cache-v1";
-
-
-
-const APP_VERSION =
-    "2.0.0";
-
-
-
-
-
-/*
-   Files required for offline startup
-*/
-
-
+// Files required for offline startup (Fixed script.js -> app.js)
 const STATIC_ASSETS = [
-
-
     "/",
-
-
     "/index.html",
-
-
     "/style.css",
-
-
-    "/script.js",
-
-
+    "/app.js",
     "/manifest.json"
-
-
 ];
-
-
-
-
-
-
-
-
 
 /* ==========================
    INSTALL EVENT
    ========================== */
-
-
-self.addEventListener(
-"install",
-event=>{
-
-
-    console.log(
-        "LifeTrack Service Worker installing..."
-    );
-
-
-
+self.addEventListener("install", event => {
+    console.log("LifeTrack Service Worker installing...");
     event.waitUntil(
-
-
-        caches.open(
-            CACHE_NAME
-        )
-        .then(
-            cache=>{
-
-
-                return cache.addAll(
-                    STATIC_ASSETS
-                );
-
-
-            }
-
-        )
-
-
+        caches.open(CACHE_NAME)
+        .then(cache => {
+            return cache.addAll(STATIC_ASSETS);
+        })
     );
-
-
-
-    /*
-       Activate immediately
-    */
-
-
+    // Activate immediately
     self.skipWaiting();
-
-
-
 });
 
-
-
-
-
-
-
-
-
 /* ==========================
-   ACTIVATE EVENT
+   ACTIVATE EVENT (Unified)
    ========================== */
-
-
-self.addEventListener(
-"activate",
-event=>{
-
-
-    console.log(
-        "LifeTrack Service Worker activated"
-    );
-
-
+self.addEventListener("activate", event => {
+    console.log("LifeTrack Service Worker activating & cleaning caches...");
+    
+    const OLD_CACHES = ["lifetrack-cache-v0"];
 
     event.waitUntil(
-
-
-        self.clients.claim()
-
-
+        Promise.all([
+            // Claim clients immediately
+            self.clients.claim(),
+            // Clean up old caches
+            caches.keys().then(cacheNames => {
+                return Promise.all(
+                    cacheNames.map(cacheName => {
+                        if (cacheName !== CACHE_NAME) {
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            })
+        ])
     );
-
-
 });
-/* ==========================================================================
-   Part 2:
-   Fetch Handler
-   Offline Strategy
-   ========================================================================== */
-
-
-
-
 
 /* ==========================
-   FETCH EVENT
+   FETCH EVENT (Offline Strategy)
    ========================== */
+self.addEventListener("fetch", event => {
+    const request = event.request;
 
-
-self.addEventListener(
-"fetch",
-event=>{
-
-
-    const request =
-        event.request;
-
-
-
-    /*
-       Only handle GET requests
-    */
-
-
-    if(
-        request.method !== "GET"
-    ){
-
+    // Only handle GET requests
+    if (request.method !== "GET") {
         return;
-
     }
 
-
-
-
-
-
     event.respondWith(
+        caches.match(request)
+        .then(cachedResponse => {
+            if (cachedResponse) {
+                // Update cache in background
+                fetch(request)
+                .then(networkResponse => {
+                    caches.open(CACHE_NAME)
+                    .then(cache => {
+                        cache.put(request, networkResponse);
+                    });
+                })
+                .catch(() => {});
 
-
-        caches.match(
-            request
-        )
-        .then(
-            cachedResponse=>{
-
-
-
-                /*
-                   Return cached version
-                   immediately
-                */
-
-
-                if(cachedResponse){
-
-
-                    /*
-                       Update cache in background
-                    */
-
-
-                    fetch(request)
-                    .then(
-                        networkResponse=>{
-
-
-                            caches.open(
-                                CACHE_NAME
-                            )
-                            .then(
-                                cache=>{
-
-
-                                    cache.put(
-                                        request,
-                                        networkResponse
-                                    );
-
-
-                                }
-                            );
-
-
-                        }
-                    )
-                    .catch(
-                        ()=>{}
-                    );
-
-
-
-                    return cachedResponse;
-
-
-                }
-
-
-
-
-
-
-
-                /*
-                   If not cached,
-                   get from network
-                */
-
-
-                return fetch(
-                    request
-                )
-                .then(
-                    networkResponse=>{
-
-
-                        return caches.open(
-                            CACHE_NAME
-                        )
-                        .then(
-                            cache=>{
-
-
-                                cache.put(
-                                    request,
-                                    networkResponse.clone()
-                                );
-
-
-
-                                return networkResponse;
-
-
-                            }
-                        );
-
-
-                    }
-
-                )
-                .catch(
-                    ()=>{
-
-
-                        /*
-                           Offline fallback
-                        */
-
-
-                        return caches.match(
-                            "/index.html"
-                        );
-
-
-                    }
-                );
-
-
-
+                return cachedResponse;
             }
 
-        )
-
-
+            // If not cached, get from network
+            return fetch(request)
+            .then(networkResponse => {
+                return caches.open(CACHE_NAME)
+                .then(cache => {
+                    cache.put(request, networkResponse.clone());
+                    return networkResponse;
+                });
+            })
+            .catch(() => {
+                // Offline fallback
+                return caches.match("/index.html");
+            });
+        })
     );
-
-
 });
-/* ==========================================================================
-   Part 3:
-   Cache Cleanup
-   Background Sync
-   Push Notification Foundation
-   ========================================================================== */
-
-
-
-
-
-
-
-/* ==========================
-   CACHE VERSION CLEANUP
-   ========================== */
-
-
-const OLD_CACHES = [
-
-    "lifetrack-cache-v0"
-
-];
-
-
-
-
-
-
-
-self.addEventListener(
-"activate",
-event=>{
-
-
-    event.waitUntil(
-
-
-        caches.keys()
-        .then(
-            cacheNames=>{
-
-
-                return Promise.all(
-
-
-                    cacheNames
-                    .map(
-                        cacheName=>{
-
-
-                            if(
-                                cacheName !== CACHE_NAME
-                            ){
-
-
-                                return caches.delete(
-                                    cacheName
-                                );
-
-
-                            }
-
-
-                        }
-
-                    )
-
-
-                );
-
-
-            }
-
-        )
-
-
-    );
-
-
-});
-
-
-
-
-
-
-
-
 
 /* ==========================
    BACKGROUND SYNC
    ========================== */
-
-
-self.addEventListener(
-"sync",
-event=>{
-
-
-    if(
-        event.tag ===
-        "lifetrack-sync"
-    ){
-
-
-        event.waitUntil(
-
-            syncData()
-
-        );
-
-
+self.addEventListener("sync", event => {
+    if (event.tag === "lifetrack-sync") {
+        event.waitUntil(syncData());
     }
-
-
 });
 
-
-
-
-
-
-
-async function syncData(){
-
-
-    console.log(
-        "LifeTrack background sync running..."
-    );
-
-
-
-    /*
-       Future:
-       Upload offline changes
-       when backend is added
-    */
-
-
+async function syncData() {
+    console.log("LifeTrack background sync running...");
     return Promise.resolve();
-
-
 }
-
-
-
-
-
-
-
-
 
 /* ==========================
    PUSH NOTIFICATION SYSTEM
    ========================== */
-
-
-self.addEventListener(
-"push",
-event=>{
-
-
+self.addEventListener("push", event => {
     let data = {
-
-
-        title:
-        "LifeTrack",
-
-
-        body:
-        "Stay consistent with your goals!"
-
+        title: "LifeTrack",
+        body: "Stay consistent with your goals!"
     };
 
-
-
-
-
-    if(event.data){
-
-
-        data =
-        event.data.json();
-
-
+    if (event.data) {
+        data = event.data.json();
     }
 
-
-
-
-
     const options = {
-
-
-        body:
-        data.body,
-
-
-
-        icon:
-        "/assets/icons/icon-192.png",
-
-
-
-        badge:
-        "/assets/icons/icon-72.png",
-
-
-
-        vibrate:[
-            100,
-            50,
-            100
-        ]
-
+        body: data.body,
+        icon: "/assets/icons/icon-192.png",
+        badge: "/assets/icons/icon-72.png",
+        vibrate: [100, 50, 100]
     };
 
-
-
-
-
-
-
     event.waitUntil(
-
-
-        self.registration
-        .showNotification(
-
-            data.title,
-
-            options
-
-        )
-
-
+        self.registration.showNotification(data.title, options)
     );
-
-
 });
-
-
-
-
-
-
-
-
 
 /* ==========================
    NOTIFICATION CLICK
    ========================== */
-
-
-self.addEventListener(
-"notificationclick",
-event=>{
-
-
+self.addEventListener("notificationclick", event => {
     event.notification.close();
-
-
-
     event.waitUntil(
-
-
-        clients.openWindow(
-            "/"
-        )
-
-
+        clients.openWindow("/")
     );
-
-
 });
 
-
-
-
-
-
-
-
-
-/* ==========================
-   SERVICE WORKER READY
-   ========================== */
-
-
-console.log(
-    "LifeTrack Service Worker Loaded 🚀"
-);
+console.log("LifeTrack Service Worker Loaded 🚀");
