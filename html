@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeTrack - Productivity & Habit Tracker</title>
+    <meta name="description" content="LifeTrack is a production-quality productivity web application designed to track habits, manage goals, countdowns, notes, to-dos, and analyze performance offline.">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <!-- Open Graph / Social Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="LifeTrack - Productivity & Habit Tracker">
+    <meta property="og:description" content="A comprehensive offline-first productivity web application for habits, countdowns, notes, and analytics.">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LifeTrack - Productivity & Habit Tracker">
+    <meta name="twitter:description" content="A comprehensive offline-first productivity web application for habits, countdowns, notes, and analytics.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'><path d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0-2-.9-2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z'/></svg>">
+    
+    <!-- Stylesheet & External Libraries -->
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="script.js" defer></script>
+</head>
+<body class="light-mode">
+    <div id="app" class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="sidebar" aria-label="Main Navigation">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <svg class="logo-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    <h1 class="logo-text">LifeTrack</h1>
+                </div>
+                <button id="sidebarToggle" class="sidebar-toggle-btn" aria-label="Toggle Sidebar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+            </div>
+            
+            <nav class="nav-menu" role="navigation">
+                <ul>
+                    <li><button class="nav-item active" data-tab="dashboard" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></button></li>
+                    <li><button class="nav-item" data-tab="habits"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Habit Tracker</span></button></li>
+                    <li><button class="nav-item" data-tab="calendar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></button></li>
+                    <li><button class="nav-item" data-tab="countdown"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Goals & Countdown</span></button></li>
+                    <li><button class="nav-item" data-tab="analytics"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span></button></li>
+                    <li><button class="nav-item" data-tab="notes"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Notes</span></button></li>
+                    <li><button class="nav-item" data-tab="todos"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>To-Do List</span></button></li>
+                    <li><button class="nav-item" data-tab="archive"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg><span>Archive</span></button></li>
+                    <li><button class="nav-item" data-tab="settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button></li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <span>Theme</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="main-content">
+            <header class="top-bar">
+                <div class="mobile-menu-trigger">
+                    <button id="mobileMenuBtn" aria-label="Open Mobile Menu">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="top-bar-title">
+                    <h2 id="pageTitle">Dashboard</h2>
+                </div>
+                <div class="top-bar-actions">
+                    <button id="archiveSessionBtn" class="btn btn-secondary" aria-label="Archive Current Session">Archive Session</button>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- ================= DASHBOARD VIEW ================= -->
+                <section id="dashboard" class="view-section active" aria-labelledby="pageTitle">
+                    <div class="welcome-section">
+                        <h3 id="welcomeMessage">Welcome back!</h3>
+                        <blockquote class="motivational-quote">
+                            <p id="quoteText">"Consistency is the DNA of mastery."</p>
+                            <cite id="quoteAuthor">— LifeTrack</cite>
+                        </blockquote>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <article class="kpi-card">
+                            <h4>Today's Completion</h4>
+                            <div class="kpi-value" id="kpiTodayCompletion">0%</div>
+                        </article>
+                        <article class="kpi-card">
+                            <h4>Weekly Completion</h4>
+                            <div class="kpi-value" id="kpiWeeklyCompletion">0%</div>
+                        </article>
+                        <article class="kpi-card">
+                            <h4>Monthly Completion</h4>
+                            <div class="kpi-value" id="kpiMonthlyCompletion">0%</div>
+                        </article>
+                        <article class="kpi-card">
+                            <h4>Current Streak</h4>
+                            <div class="kpi-value" id="kpiCurrentStreak">0 days</div>
+                        </article>
+                        <article class="kpi-card">
+                            <h4>Longest Streak</h4>
+                            <div class="kpi-value" id="kpiLongestStreak">0 days</div>
+                        </article>
+                        <article class="kpi-card">
+                            <h4>Total Completed Tasks</h4>
+                            <div class="kpi-value" id="kpiTotalCompleted">0</div>
+                        </article>
+                        <article class="kpi-card">
+                            <h4>Total Habits</h4>
+                            <div class="kpi-value" id="kpiTotalHabits">0</div>
+                        </article>
+                        <article class="kpi-card">
+                            <h4>Overall Rate</h4>
+                            <div class="kpi-value" id="kpiCompletionRate">0%</div>
+                        </article>
+                    </div>
+
+                    <div class="dashboard-charts-grid">
+                        <section class="chart-container-card">
+                            <h3>Weekly Overview</h3>
+                            <canvas id="dashboardWeeklyChart" aria-label="Weekly overview chart" role="img"></canvas>
+                        </section>
+                        <section class="chart-container-card">
+                            <h3>Category Distribution</h3>
+                            <canvas id="dashboardCategoryChart" aria-label="Category distribution chart" role="img"></canvas>
+                        </section>
+                    </div>
+                </section>
+
+                <!-- ================= HABIT TRACKER VIEW ================= -->
+                <section id="habits" class="view-section" aria-labelledby="habitsHeading">
+                    <div class="section-header">
+                        <h3 id="habitsHeading">Habit Tracker</h3>
+                        <div class="habit-actions">
+                            <input type="search" id="habitSearchInput" placeholder="Search habits..." aria-label="Search habits" autocomplete="off">
+                            <select id="habitCategoryFilter" aria-label="Filter habits by category">
+                                <option value="all">All Categories</option>
+                            </select>
+                            <button id="addHabitBtn" class="btn btn-primary">Add Habit</button>
+                        </div>
+                    </div>
+
+                    <div class="weeks-controls">
+                        <label for="weeksCountInput">Number of Weeks:</label>
+                        <input type="number" id="weeksCountInput" min="1" max="52" value="4" aria-label="Number of weeks to display">
+                    </div>
+
+                    <div class="table-responsive" tabindex="0" role="region" aria-label="Habits tracking grid">
+                        <table id="habitTable" class="habit-table">
+                            <caption>Weekly habit tracking matrix</caption>
+                            <thead>
+                                <tr id="habitTableHeaderRow">
+                                    <th scope="col">Habit</th>
+                                    <th scope="col">Category</th>
+                                    <!-- Dynamic weeks generated via JS -->
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="habitTableBody">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ================= CALENDAR VIEW ================= -->
+                <section id="calendar" class="view-section" aria-labelledby="calendarHeading">
+                    <div class="section-header">
+                        <h3 id="calendarHeading">Calendar View</h3>
+                        <div class="calendar-controls">
+                            <button id="prevPeriodBtn" class="btn btn-secondary" aria-label="Previous period">&lt;</button>
+                            <span id="calendarCurrentMonthYear">Month Year</span>
+                            <button id="nextPeriodBtn" class="btn btn-secondary" aria-label="Next period">&gt;</button>
+                            <div class="view-mode-selector" role="radiogroup" aria-label="Calendar view mode">
+                                <button class="btn btn-secondary active" data-view="month" role="radio" aria-checked="true">Month</button>
+                                <button class="btn btn-secondary" data-view="week" role="radio" aria-checked="false">Week</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="calendarContainer" class="calendar-grid-container" role="grid" aria-label="Calendar grid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </section>
+
+                <!-- ================= GOALS & COUNTDOWN VIEW ================= -->
+                <section id="countdown" class="view-section" aria-labelledby="countdownHeading">
+                    <div class="section-header">
+                        <h3 id="countdownHeading">Goals & Countdowns</h3>
+                        <button id="addCountdownBtn" class="btn btn-primary">Add Countdown</button>
+                    </div>
+                    <div id="countdownListContainer" class="countdown-grid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </section>
+
+                <!-- ================= ANALYTICS VIEW ================= -->
+                <section id="analytics" class="view-section" aria-labelledby="analyticsHeading">
+                    <div class="section-header">
+                        <h3 id="analyticsHeading">Performance Analytics</h3>
+                        <div class="analytics-filters">
+                            <select id="analyticsTimeframeSelect" aria-label="Analytics timeframe">
+                                <option value="week">Week</option>
+                                <option value="month" selected>Month</option>
+                                <option value="year">Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="statistics-summary-grid">
+                        <article class="stat-card"><h4>Total Habits Completed</h4><p id="statTotalHabitsCompleted">0</p></article>
+                        <article class="stat-card"><h4>Completion Percentage</h4><p id="statCompletionPercentage">0%</p></article>
+                        <article class="stat-card"><h4>Average Completion</h4><p id="statAverageCompletion">0%</p></article>
+                        <article class="stat-card"><h4>Best Week</h4><p id="statBestWeek">-</p></article>
+                        <article class="stat-card"><h4>Best Month</h4><p id="statBestMonth">-</p></article>
+                        <article class="stat-card"><h4>Longest Streak</h4><p id="statLongestStreak">0</p></article>
+                        <article class="stat-card"><h4>Current Streak</h4><p id="statCurrentStreak">0</p></article>
+                        <article class="stat-card"><h4>Most Successful Habit</h4><p id="statMostSuccessful">-</p></article>
+                        <article class="stat-card"><h4>Least Successful Habit</h4><p id="statLeastSuccessful">-</p></article>
+                    </div>
+
+                    <div class="analytics-charts-grid">
+                        <section class="chart-card"><h4>Daily Bar Chart</h4><canvas id="analyticsDailyChart" aria-label="Daily bar chart" role="img"></canvas></section>
+                        <section class="chart-card"><h4>Weekly Line Graph</h4><canvas id="analyticsWeeklyChart" aria-label="Weekly line graph" role="img"></canvas></section>
+                        <section class="chart-card"><h4>Monthly Line Graph</h4><canvas id="analyticsMonthlyChart" aria-label="Monthly line graph" role="img"></canvas></section>
+                        <section class="chart-card"><h4>Pie Chart</h4><canvas id="analyticsPieChart" aria-label="Pie chart" role="img"></canvas></section>
+                        <section class="chart-card"><h4>Doughnut Chart</h4><canvas id="analyticsDoughnutChart" aria-label="Doughnut chart" role="img"></canvas></section>
+                        <section class="chart-card"><h4>Radar Chart</h4><canvas id="analyticsRadarChart" aria-label="Radar chart" role="img"></canvas></section>
+                    </div>
+
+                    <section class="heatmap-section">
+                        <h4>Contribution Calendar</h4>
+                        <div id="heatmapContainer" class="heatmap-container" role="grid" aria-label="Contribution heatmap"></div>
+                    </section>
+                </section>
+
+                <!-- ================= NOTES VIEW ================= -->
+                <section id="notes" class="view-section" aria-labelledby="notesHeading">
+                    <div class="section-header">
+                        <h3 id="notesHeading">Notes & Journal</h3>
+                        <button id="addNoteBtn" class="btn btn-primary">Add Note</button>
+                    </div>
+                    <div class="notes-filters">
+                        <button class="btn btn-secondary active" data-note-filter="all">All Notes</button>
+                        <button class="btn btn-secondary" data-note-filter="pinned">Pinned</button>
+                        <button class="btn btn-secondary" data-note-filter="checklist">Checklists</button>
+                    </div>
+                    <div id="notesContainer" class="notes-grid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </section>
+
+                <!-- ================= TO-DO LIST VIEW ================= -->
+                <section id="todos" class="view-section" aria-labelledby="todosHeading">
+                    <div class="section-header">
+                        <h3 id="todosHeading">To-Do List</h3>
+                        <button id="addTodoBtn" class="btn btn-primary">Add Task</button>
+                    </div>
+                    <div class="todo-filters">
+                        <input type="search" id="todoSearchInput" placeholder="Search tasks..." aria-label="Search tasks" autocomplete="off">
+                        <select id="todoPriorityFilter" aria-label="Filter tasks by priority">
+                            <option value="all">All Priorities</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <select id="todoStatusFilter" aria-label="Filter tasks by status">
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div id="todoListContainer" class="todo-list-container">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </section>
+
+                <!-- ================= ARCHIVE VIEW ================= -->
+                <section id="archive" class="view-section" aria-labelledby="archiveHeading">
+                    <div class="section-header">
+                        <h3 id="archiveHeading">Archived Sessions</h3>
+                    </div>
+                    <div id="archiveListContainer" class="archive-list-container">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </section>
+
+                <!-- ================= SETTINGS VIEW ================= -->
+                <section id="settings" class="view-section" aria-labelledby="settingsHeading">
+                    <h3 id="settingsHeading">Settings & Preferences</h3>
+                    
+                    <form class="settings-form" onsubmit="event.preventDefault();">
+                        <fieldset>
+                            <legend>Appearance & Localization</legend>
+                            <div class="setting-item">
+                                <label for="settingThemeSelect">Theme Mode</label>
+                                <select id="settingThemeSelect" aria-label="Theme Mode">
+                                    <option value="light">Light Mode</option>
+                                    <option value="dark">Dark Mode</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label for="settingAccentColor">Accent Color</label>
+                                <input type="color" id="settingAccentColor" value="#4f46e5" aria-label="Accent Color">
+                            </div>
+                            <div class="setting-item">
+                                <label for="settingFontSize">Font Size</label>
+                                <select id="settingFontSize" aria-label="Font Size">
+                                    <option value="small">Small</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="large">Large</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label for="settingFirstDayOfWeek">First Day of Week</label>
+                                <select id="settingFirstDayOfWeek" aria-label="First Day of Week">
+                                    <option value="monday">Monday</option>
+                                    <option value="sunday">Sunday</option>
+                                </select>
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Data Management & Backups</legend>
+                            <div class="settings-actions-group">
+                                <button id="exportJsonBtn" class="btn btn-secondary" type="button">Export JSON Backup</button>
+                                <button id="exportCsvBtn" class="btn btn-secondary" type="button">Export CSV Report</button>
+                                <button id="exportPdfBtn" class="btn btn-secondary" type="button">Export PDF Report</button>
+                                <label class="btn btn-secondary file-upload-label" for="importJsonInput">Import JSON Backup</label>
+                                <input type="file" id="importJsonInput" accept=".json" style="display:none;" aria-label="Import JSON backup file">
+                            </div>
+                            <div class="setting-item danger-zone">
+                                <button id="resetDataBtn" class="btn btn-danger" type="button">Reset All Data</button>
+                            </div>
+                        </fieldset>
+                    </form>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+    <!-- Habit Modal -->
+    <div id="habitModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="habitModalTitle" hidden>
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="habitModalTitle">Add / Edit Habit</h3>
+                <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+            </header>
+            <form id="habitForm">
+                <fieldset>
+                    <legend>Habit Details</legend>
+                    <input type="hidden" id="habitId">
+                    <div class="form-group">
+                        <label for="habitNameInput">Habit Name <span aria-hidden="true">*</span></label>
+                        <input type="text" id="habitNameInput" required minlength="1" maxlength="100" placeholder="e.g. Morning Workout" autocomplete="off" inputmode="text">
+                    </div>
+                    <div class="form-group">
+                        <label for="habitCategoryInput">Category</label>
+                        <input type="text" id="habitCategoryInput" list="categorySuggestions" placeholder="e.g. Health" autocomplete="off">
+                        <datalist id="categorySuggestions">
+                            <option value="Health">
+                            <option value="Productivity">
+                            <option value="Learning">
+                            <option value="Fitness">
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="habitColorInput">Color</label>
+                        <input type="color" id="habitColorInput" value="#4f46e5">
+                    </div>
+                </fieldset>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Habit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Countdown Modal -->
+    <div id="countdownModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="countdownModalTitle" hidden>
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="countdownModalTitle">Add / Edit Goal & Countdown</h3>
+                <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+            </header>
+            <form id="countdownForm">
+                <fieldset>
+                    <legend>Countdown Information</legend>
+                    <input type="hidden" id="countdownId">
+                    <div class="form-group">
+                        <label for="countdownTitleInput">Title <span aria-hidden="true">*</span></label>
+                        <input type="text" id="countdownTitleInput" required minlength="1" maxlength="100" placeholder="e.g. Final Exam" autocomplete="off" inputmode="text">
+                    </div>
+                    <div class="form-group">
+                        <label for="countdownDescInput">Description</label>
+                        <textarea id="countdownDescInput" rows="3" placeholder="Optional details..." autocomplete="off"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="countdownCategoryInput">Category</label>
+                        <input type="text" id="countdownCategoryInput" placeholder="e.g. Education" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="countdownDateInput">Date <span aria-hidden="true">*</span></label>
+                        <input type="date" id="countdownDateInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="countdownTimeInput">Time <span aria-hidden="true">*</span></label>
+                        <input type="time" id="countdownTimeInput" required value="00:00">
+                    </div>
+                    <div class="form-group">
+                        <label for="countdownPriorityInput">Priority</label>
+                        <select id="countdownPriorityInput">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="countdownColorInput">Color</label>
+                        <input type="color" id="countdownColorInput" value="#4f46e5">
+                    </div>
+                </fieldset>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Countdown</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="noteModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle" hidden>
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="noteModalTitle">Add / Edit Note</h3>
+                <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+            </header>
+            <form id="noteForm">
+                <fieldset>
+                    <legend>Note Content</legend>
+                    <input type="hidden" id="noteId">
+                    <div class="form-group">
+                        <label for="noteTitleInput">Title <span aria-hidden="true">*</span></label>
+                        <input type="text" id="noteTitleInput" required minlength="1" maxlength="100" placeholder="Note Title" autocomplete="off" inputmode="text">
+                    </div>
+                    <div class="form-group">
+                        <label for="noteContentInput">Content / Checklist items</label>
+                        <textarea id="noteContentInput" rows="5" placeholder="Write note or checklist..." autocomplete="off"></textarea>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label><input type="checkbox" id="notePinnedInput"> Pin to top</label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label><input type="checkbox" id="noteIsChecklistInput"> Enable Checklist mode</label>
+                    </div>
+                </fieldset>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Todo Modal -->
+    <div id="todoModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="todoModalTitle" hidden>
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="todoModalTitle">Add / Edit Task</h3>
+                <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+            </header>
+            <form id="todoForm">
+                <fieldset>
+                    <legend>Task Information</legend>
+                    <input type="hidden" id="todoId">
+                    <div class="form-group">
+                        <label for="todoTextInput">Task Description <span aria-hidden="true">*</span></label>
+                        <input type="text" id="todoTextInput" required minlength="1" maxlength="200" placeholder="What needs to be done?" autocomplete="off" inputmode="text">
+                    </div>
+                    <div class="form-group">
+                        <label for="todoPriorityInput">Priority</label>
+                        <select id="todoPriorityInput">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="todoDueDateInput">Due Date</label>
+                        <input type="date" id="todoDueDateInput">
+                    </div>
+                </fieldset>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
