@@ -3246,6 +3246,22 @@ textarea {
     }
 }
 
+/* ==========================================================================
+   DASHBOARD CHARTS GRID FIX
+   ========================================================================== */
+
+.dashboard-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .dashboard-charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
 
 
 /* ==========================================================================
