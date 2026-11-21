@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeTrack — Productivity & Habit OS</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-soft: rgba(99, 102, 241, 0.12);
+      --accent-border: rgba(99, 102, 241, 0.28);
+      --base-font: 15px;
+    }
+
+    html {
+      font-size: var(--base-font);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    body.dark {
+      background-color: #0b1120;
+      color: #e2e8f0;
+    }
+
+    .surface {
+      background-color: #ffffff;
+      border-color: #e2e8f0;
+    }
+
+    body.dark .surface {
+      background-color: #111827;
+      border-color: #1f2937;
+    }
+
+    .surface-muted {
+      background-color: #f1f5f9;
+      border-color: #e2e8f0;
+    }
+
+    body.dark .surface-muted {
+      background-color: #1e293b;
+      border-color: #334155;
+    }
+
+    .text-muted {
+      color: #64748b;
+    }
+
+    body.dark .text-muted {
+      color: #94a3b8;
+    }
+
+    .accent-bg {
+      background-color: var(--accent);
+    }
+
+    .accent-bg:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .accent-text {
+      color: var(--accent);
+    }
+
+    .accent-soft-bg {
+      background-color: var(--accent-soft);
+    }
+
+    .accent-border {
+      border-color: var(--accent-border);
+    }
+
+    .nav-btn.active {
+      background-color: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+      font-weight: 600;
+    }
+
+    .nav-btn:not(.active):hover {
+      background-color: rgba(148, 163, 184, 0.12);
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 9999px;
+    }
+
+    @media print {
+      #sidebar, #topbar-actions, .no-print {
+        display: none !important;
+      }
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row antialiased">
+
+  <!-- Mobile Sidebar Backdrop -->
+  <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden"></div>
+
+  <!-- Left Sidebar -->
+  <aside id="sidebar" class="surface fixed md:sticky top-0 left-0 z-40 h-screen w-60 shrink-0 border-r flex flex-col justify-between transition-transform duration-200 -translate-x-full md:translate-x-0">
+    <div class="p-4 flex flex-col gap-5 overflow-y-auto">
+      <!-- Brand Header -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="accent-bg w-9 h-9 rounded-xl flex items-center justify-center shadow-sm">
+            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-base tracking-tight leading-tight">LifeTrack</div>
+            <div class="text-[11px] text-muted font-medium">Curious Minds Studios</div>
+          </div>
+        </div>
+        <button id="close-sidebar-btn" class="md:hidden p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Close navigation">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <nav id="nav-list" class="flex flex-col gap-1">
+        <button data-view="dashboard" class="nav-btn active flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 shrink-0"></i><span>Dashboard</span>
+        </button>
+        <button data-view="habits" class="nav-btn flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors">
+          <i data-lucide="check-square" class="w-4 h-4 shrink-0"></i><span>Habit Tracker</span>
+        </button>
+        <button data-view="calendar" class="nav-btn flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors">
+          <i data-lucide="calendar" class="w-4 h-4 shrink-0"></i><span>Calendar</span>
+        </button>
+        <button data-view="goals" class="nav-btn flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors">
+          <i data-lucide="target" class="w-4 h-4 shrink-0"></i><span>Goals &amp; Countdown</span>
+        </button>
+        <button data-view="analytics" class="nav-btn flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors">
+          <i data-lucide="bar-chart-3" class="w-4 h-4 shrink-0"></i><span>Analytics</span>
+        </button>
+        <button data-view="notes" class="nav-btn flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors">
+          <i data-lucide="sticky-note" class="w-4 h-4 shrink-0"></i><span>Notes</span>
+        </button>
+        <button data-view="todos" class="nav-btn flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors">
+          <i data-lucide="list-todo" class="w-4 h-4 shrink-0"></i><span>To-Do List</span>
+        </button>
+        <button data-view="archive" class="nav-btn flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors">
+          <i data-lucide="archive" class="w-4 h-4 shrink-0"></i><span>Archive</span>
+        </button>
+        <button data-view="settings" class="nav-btn flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors">
+          <i data-lucide="settings" class="w-4 h-4 shrink-0"></i><span>Settings</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Sidebar Footer -->
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
+      <div class="flex items-center gap-2 text-xs text-muted">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+        <span class="truncate font-medium">Offline-First Local Storage</span>
+      </div>
+      <div class="flex items-center justify-between gap-2">
+        <button id="info-btn" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted transition-colors" title="About LifeTrack OS">
+          <i data-lucide="info" class="w-4 h-4"></i>
+        </button>
+        <button id="dark-mode-toggle" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors">
+          <i data-lucide="sun" class="w-3.5 h-3.5" id="theme-icon"></i>
+          <span id="theme-label">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Top Header -->
+    <header class="surface sticky top-0 z-20 border-b px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <button id="open-sidebar-btn" class="md:hidden p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Open navigation">
+          <i data-lucide="menu" class="w-4 h-4"></i>
+        </button>
+        <h1 id="page-title" class="text-lg sm:text-xl font-bold tracking-tight truncate">Dashboard</h1>
+      </div>
+      <div id="topbar-actions" class="flex items-center gap-2 shrink-0">
+        <button id="archive-session-btn" class="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors">
+          <i data-lucide="archive" class="w-4 h-4"></i>
+          <span>Archive Session</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- View Container -->
+    <main id="view-container" class="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto"></main>
+  </div>
+
+  <!-- Reusable Modal Overlay -->
+  <div id="modal-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div id="modal-card" class="surface w-full max-w-md rounded-2xl border shadow-xl p-5 sm:p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="modal-title" class="text-lg font-bold">Modal</h2>
+        <button id="modal-close" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-muted">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'lifetrack_os_v1';
+
+      function getTodayStr() {
+        const d = new Date();
+        return formatDateStr(d);
+      }
+
+      function formatDateStr(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+
+      function addDays(dateStr, delta) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const dt = new Date(y, m - 1, d);
+        dt.setDate(dt.getDate() + delta);
+        return formatDateStr(dt);
+      }
+
+      function getDefaultState() {
+        const today = getTodayStr();
+        const yesterday = addDays(today, -1);
+        const twoDaysAgo = addDays(today, -2);
+        const threeDaysAgo = addDays(today, -3);
+
+        const examTarget = new Date(Date.now() + 18 * 86400000);
+        const sprintTarget = new Date(Date.now() + 7 * 86400000);
+
+        return {
+          habits: [
+            { id: 'h1', name: 'Read & Summarize 1 Chapter', category: 'STUDY' },
+            { id: 'h2', name: 'Deep Focus Session (90m)', category: 'PRODUCTIVITY' },
+            { id: 'h3', name: 'Morning Exercise (30m)', category: 'HEALTH' },
+            { id: 'h4', name: 'Hydrate 2.5L Water', category: 'WELLNESS' }
+          ],
+          habitLogs: {
+            [today]: ['h1', 'h2', 'h3'],
+            [yesterday]: ['h1', 'h2'],
+            [twoDaysAgo]: ['h1', 'h3', 'h4'],
+            [threeDaysAgo]: ['h2']
+          },
+          tasks: [
+            { id: 't1', title: 'Organize study schedule for upcoming exam', due: today, priority: 'HIGH', completed: false },
+            { id: 't2', title: 'Review weekly analytics and adjust habit targets', due: addDays(today, 2), priority: 'MEDIUM', completed: false },
+            { id: 't3', title: 'Refill water bottle & prep morning workout gear', due: today, priority: 'LOW', completed: true }
+          ],
+          goals: [
+            {
+              id: 'g1',
+              title: 'Final Semester Exam',
+              description: 'Complete full syllabus revision and solve past papers.',
+              priority: 'HIGH',
+              createdAt: Date.now() - 6 * 86400000,
+              targetAt: examTarget.getTime()
+            },
+            {
+              id: 'g2',
+              title: '7-Day Productivity Sprint',
+              description: 'Maintain 90%+ daily habit consistency for a full week.',
+              priority: 'MEDIUM',
+              createdAt: Date.now() - 2 * 86400000,
+              targetAt: sprintTarget.getTime()
+            }
+          ],
+          notes: [
+            {
+              id: 'n1',
+              title: 'Weekly Study & Focus Blueprint',
+              date: today,
+              pinned: true,
+              type: 'checklist',
+              body: '',
+              items: [
+                { id: 'ni1', text: 'Review weak topics before noon', done: true },
+                { id: 'ni2', text: 'Complete 90-minute deep work block', done: false },
+                { id: 'ni3', text: 'Take timed practice assessment', done: false }
+              ]
+            },
+            {
+              id: 'n2',
+              title: 'Evening Wind-Down Protocol',
+              date: today,
+              pinned: false,
+              type: 'text',
+              body: "Disconnect from screens 45 minutes prior to sleep. Prepare tomorrow's top 3 tasks in the To-Do List.",
+              items: []
+            }
+          ],
+          archives: [],
+          settings: {
+            theme: 'light',
+            accent: '#6366f1',
+            fontSize: 'medium',
+            firstDayOfWeek: 'monday'
+          }
+        };
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            return { ...getDefaultState(), ...parsed };
+          }
+        } catch (e) {
+          // Safe fallback in restricted environments
+        }
+        return getDefaultState();
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+          // Ignore storage quota / sandbox errors
+        }
+      }
+
+      let state = loadState();
+      let currentView = 'dashboard';
+      let habitSearch = '';
+      let habitCategoryFilter = 'ALL';
+      let habitWeeksCount = 4;
+      let calendarDate = new Date();
+      let selectedCalDate = getTodayStr();
+      let calendarMode = 'month';
+      let analyticsPeriod = 'month';
+      let noteFilter = 'all';
+      let todoSearch = '';
+      let todoPriorityFilter = 'ALL';
+      let todoStatusFilter = 'ALL';
+      let activeCharts = [];
+      let countdownInterval = null;
+
+      function uid(prefix) {
+        return prefix + '_' + Math.random().toString(36).slice(2, 9);
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        const colors = type === 'error'
+          ? 'bg-rose-600 text-white'
+          : 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900';
+        el.className = `${colors} px-4 py-2.5 rounded-xl shadow-lg text-xs sm:text-sm font-semibold pointer-events-auto transition-opacity duration-300`;
+        el.textContent = message;
+        container.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = '0';
+          setTimeout(() => el.remove(), 300);
+        }, 2600);
+      }
+
+      function applySettings() {
+        const isDark = state.settings.theme === 'dark';
+        document.body.classList.toggle('dark', isDark);
+
+        const accent = state.settings.accent || '#6366f1';
+        document.documentElement.style.setProperty('--accent', accent);
+        document.documentElement.style.setProperty('--accent-hover', accent);
+        document.documentElement.style.setProperty('--accent-soft', hexToRgba(accent, 0.14));
+        document.documentElement.style.setProperty('--accent-border', hexToRgba(accent, 0.32));
+
+        const sizes = { small: '14px', medium: '15px', large: '16.5px' };
+        document.documentElement.style.setProperty('--base-font', sizes[state.settings.fontSize] || '15px');
+
+        const themeLabel = document.getElementById('theme-label');
+        const themeIcon = document.getElementById('theme-icon');
+        if (themeLabel) themeLabel.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        if (themeIcon) themeIcon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+        lucide.createIcons();
+      }
+
+      function hexToRgba(hex, alpha) {
+        const clean = hex.replace('#', '');
+        const r = parseInt(clean.substring(0, 2), 16) || 99;
+        const g = parseInt(clean.substring(2, 4), 16) || 102;
+        const b = parseInt(clean.substring(4, 6), 16) || 241;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      function destroyCharts() {
+        activeCharts.forEach(c => {
+          try { c.destroy(); } catch (e) {}
+        });
+        activeCharts = [];
+      }
+
+      function getDayCompletionPct(dateStr) {
+        if (!state.habits.length) return 0;
+        const done = (state.habitLogs[dateStr] || []).filter(id => state.habits.some(h => h.id === id));
+        return Math.round((done.length / state.habits.length) * 100);
+      }
+
+      function toggleHabitOnDate(habitId, dateStr) {
+        if (!state.habitLogs[dateStr]) state.habitLogs[dateStr] = [];
+        const idx = state.habitLogs[dateStr].indexOf(habitId);
+        if (idx >= 0) state.habitLogs[dateStr].splice(idx, 1);
+        else state.habitLogs[dateStr].push(habitId);
+        saveState();
+        renderCurrentView();
+      }
+
+      function getStreaks() {
+        const today = getTodayStr();
+        let current = 0;
+        for (let i = 0; i < 365; i++) {
+          const d = addDays(today, -i);
+          if (getDayCompletionPct(d) > 0) current++;
+          else if (i > 0) break;
+        }
+        let longest = current;
+        let run = 0;
+        for (let i = 0; i < 120; i++) {
+          const d = addDays(today, -i);
+          if (getDayCompletionPct(d) > 0) {
+            run++;
+            if (run > longest) longest = run;
+          } else {
+            run = 0;
+          }
+        }
+        return { current, longest };
+      }
+
+      function getWeekStart(dateObj) {
+        const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+        const day = d.getDay();
+        const preferMon = state.settings.firstDayOfWeek !== 'sunday';
+        const diff = preferMon ? (day === 0 ? -6 : 1 - day) : -day;
+        d.setDate(d.getDate() + diff);
+        return d;
+      }
+
+      function getKPIs() {
+        const today = getTodayStr();
+        const todayPct = getDayCompletionPct(today);
+
+        let weeklyTotal = 0;
+        for (let i = 0; i < 7; i++) weeklyTotal += getDayCompletionPct(addDays(today, -i));
+        const weeklyPct = Math.round(weeklyTotal / 7);
+
+        let monthlyTotal = 0;
+        for (let i = 0; i < 30; i++) monthlyTotal += getDayCompletionPct(addDays(today, -i));
+        const monthlyPct = Math.round(monthlyTotal / 30);
+
+        const streaks = getStreaks();
+        const completedTasks = state.tasks.filter(t => t.completed).length;
+
+        let totalLogs = 0;
+        Object.values(state.habitLogs).forEach(arr => { totalLogs += arr.length; });
+
+        return {
+          todayPct,
+          weeklyPct,
+          monthlyPct,
+          currentStreak: streaks.current,
+          longestStreak: streaks.longest,
+          completedTasks,
+          totalHabits: state.habits.length,
+          overallRate: monthlyPct,
+          totalLogs
+        };
+      }
+
+      function categoryBadge(cat) {
+        const map = {
+          STUDY: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300',
+          PRODUCTIVITY: 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300',
+          HEALTH: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
+          WELLNESS: 'bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300'
+        };
+        return map[cat] || 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+      }
+
+      function priorityBadge(p) {
+        if (p === 'HIGH') return 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300';
+        if (p === 'MEDIUM') return 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300';
+        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300';
+      }
+
+      // Modal Helpers
+      function openModal(title, html) {
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-body').innerHTML = html;
+        const overlay = document.getElementById('modal-overlay');
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        lucide.createIcons();
+      }
+
+      function closeModal() {
+        const overlay = document.getElementById('modal-overlay');
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+      }
+
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.getElementById('modal-overlay').addEventListener('click', (e) => {
+        if (e.target.id === 'modal-overlay') closeModal();
+      });
+
+      // Navigation
+      const viewTitles = {
+        dashboard: 'Dashboard',
+        habits: 'Habit Tracker',
+        calendar: 'Schedule & Habit Audit Calendar',
+        goals: 'Goals & Live Countdowns',
+        analytics: 'Performance Analytics',
+        notes: 'Notes & Checklists',
+        todos: 'To-Do List',
+        archive: 'Archived Sessions',
+        settings: 'Settings & Data Management'
+      };
+
+      function switchView(view) {
+        currentView = view;
+        document.getElementById('page-title').textContent = viewTitles[view] || 'LifeTrack';
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.view === view);
+        });
+        closeMobileSidebar();
+        renderCurrentView();
+      }
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchView(btn.dataset.view));
+      });
+
+      function openMobileSidebar() {
+        document.getElementById('sidebar').classList.remove('-translate-x-full');
+        document.getElementById('sidebar-backdrop').classList.remove('hidden');
+      }
+
+      function closeMobileSidebar() {
+        document.getElementById('sidebar').classList.add('-translate-x-full');
+        document.getElementById('sidebar-backdrop').classList.add('hidden');
+      }
+
+      document.getElementById('open-sidebar-btn').addEventListener('click', openMobileSidebar);
+      document.getElementById('close-sidebar-btn').addEventListener('click', closeMobileSidebar);
+      document.getElementById('sidebar-backdrop').addEventListener('click', closeMobileSidebar);
+
+      // Dark Mode Toggle
+      document.getElementById('dark-mode-toggle').addEventListener('click', () => {
+        state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
+        saveState();
+        applySettings();
+        renderCurrentView();
+      });
+
+      // Info Modal
+      document.getElementById('info-btn').addEventListener('click', () => {
+        openModal('About LifeTrack OS', `
+          <div class="space-y-3 text-sm text-muted leading-relaxed">
+            <p><strong class="text-slate-900 dark:text-white">LifeTrack Productivity &amp; Habit OS</strong> is an offline-first personal operating system built for Curious Minds Studios.</p>
+            <p>All habits, calendar logs, countdowns, notes, tasks, and archived snapshots are stored locally in your browser's <code class="px-1.5 py-0.5 rounded surface-muted text-xs">localStorage</code>.</p>
+            <p>Use the <strong>Settings</strong> tab anytime to export JSON, CSV, or printable PDF backups.</p>
+          </div>
+        `);
+      });
+
+      // Archive Session
+      document.getElementById('archive-session-btn').addEventListener('click', () => {
+        openModal('Archive Current Session', `
+          <form id="archive-form" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wide text-muted mb-1.5">Session Label</label>
+              <input id="archive-label" type="text" required value="Snapshot — ${getTodayStr()}" class="w-full px-3 py-2 rounded-lg border surface text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <p class="text-xs text-muted">Saves a point-in-time snapshot of your current habits, logs, tasks, and completion metrics to the Archive tab.</p>
+            <div class="flex justify-end gap-2">
+              <button type="button" id="cancel-archive" class="px-4 py-2 rounded-lg border text-sm font-medium">Cancel</button>
+              <button type="submit" class="accent-bg text-white px-4 py-2 rounded-lg text-sm font-semibold">Save Snapshot</button>
+            </div>
+          </form>
+        `);
+        document.getElementById('cancel-archive').addEventListener('click', closeModal);
+        document.getElementById('archive-form').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const label = document.getElementById('archive-label').value.trim() || `Snapshot ${getTodayStr()}`;
+          const kpis = getKPIs();
+          state.archives.unshift({
+            id: uid('arc'),
+            label,
+            createdAt: new Date().toLocaleString(),
+            kpis,
+            snapshot: JSON.parse(JSON.stringify({
+              habits: state.habits,
+              habitLogs: state.habitLogs,
+              tasks: state.tasks,
+              goals: state.goals,
+              notes: state.notes
+            }))
+          });
+          saveState();
+          closeModal();
+          showToast('Session snapshot archived');
+          if (currentView === 'archive') renderCurrentView();
+        });
+      });
+
+      // ==================== VIEWS ====================
+      function renderCurrentView() {
+        destroyCharts();
+        if (countdownInterval) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+        }
+        const container = document.getElementById('view-container');
+        if (currentView === 'dashboard') renderDashboard(container);
+        else if (currentView === 'habits') renderHabits(container);
+        else if (currentView === 'calendar') renderCalendar(container);
+        else if (currentView === 'goals') renderGoals(container);
+        else if (currentView === 'analytics') renderAnalytics(container);
+        else if (currentView === 'notes') renderNotes(container);
+        else if (currentView === 'todos') renderTodos(container);
+        else if (currentView === 'archive') renderArchive(container);
+        else if (currentView === 'settings') renderSettings(container);
+        lucide.createIcons();
+      }
+
+      // 1. DASHBOARD
+      function renderDashboard(el) {
+        const kpis = getKPIs();
+        el.innerHTML = `
+          <div class="space-y-6">
+            <!-- Welcome Banner -->
+            <div class="accent-soft-bg border accent-border rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Welcome back to LifeTrack!</h2>
+                <p class="text-sm text-muted mt-1 italic">"Consistency is the DNA of mastery." — <span class="font-semibold not-italic">LifeTrack OS</span></p>
+              </div>
+              <div class="flex flex-wrap gap-2.5">
+                <button id="dash-go-habits" class="accent-bg text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs transition-opacity hover:opacity-95">+ Track Habits</button>
+                <button id="dash-go-todos" class="surface border px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">+ Manage Tasks</button>
+              </div>
+            </div>
+
+            <!-- 8 KPI Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+              ${kpiCard("TODAY'S COMPLETION", `${kpis.todayPct}%`, 'text-indigo-600 dark:text-indigo-400')}
+              ${kpiCard('WEEKLY COMPLETION', `${kpis.weeklyPct}%`, 'text-purple-600 dark:text-purple-400')}
+              ${kpiCard('MONTHLY COMPLETION', `${kpis.monthlyPct}%`, 'text-blue-600 dark:text-blue-400')}
+              ${kpiCard('CURRENT STREAK', `${kpis.currentStreak} days`, 'text-emerald-600 dark:text-emerald-400')}
+              ${kpiCard('LONGEST STREAK', `${kpis.longestStreak} days`, 'text-amber-600 dark:text-amber-400')}
+              ${kpiCard('TOTAL COMPLETED TASKS', `${kpis.completedTasks}`, 'text-teal-600 dark:text-teal-400')}
+              ${kpiCard('TOTAL HABITS', `${kpis.totalHabits}`, 'text-slate-700 dark:text-slate-200')}
+              ${kpiCard('OVERALL RATE', `${kpis.overallRate}%`, 'text-indigo-600 dark:text-indigo-400')}
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div class="surface border rounded-2xl p-5 shadow-xs">
+                <h3 class="text-sm font-bold mb-4">Weekly Overview</h3>
+                <div class="relative h-64">
+                  <canvas id="dash-weekly-chart"></canvas>
+                </div>
+              </div>
+              <div class="surface border rounded-2xl p-5 shadow-xs">
+                <h3 class="text-sm font-bold mb-4">Category Distribution</h3>
+                <div class="relative h-64">
+                  <canvas id="dash-cat-chart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('dash-go-habits').addEventListener('click', () => switchView('habits'));
+        document.getElementById('dash-go-todos').addEventListener('click', () => switchView('todos'));
+
+        // Weekly Overview Chart
+        const today = new Date();
+        const ws = getWeekStart(today);
+        const labels = [];
+        const values = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(ws);
+          d.setDate(ws.getDate() + i);
+          labels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+          values.push(getDayCompletionPct(formatDateStr(d)));
+        }
+
+        const isDark = state.settings.theme === 'dark';
+        const gridColor = isDark ? 'rgba(148,163,184,0.12)' : 'rgba(148,163,184,0.22)';
+        const textColor = isDark ? '#94a3b8' : '#64748b';
+
+        activeCharts.push(new Chart(document.getElementById('dash-weekly-chart'), {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Completion %',
+              data: values,
+              backgroundColor: state.settings.accent || '#6366f1',
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, max: 100, grid: { color: gridColor }, ticks: { color: textColor } },
+              x: { grid: { display: false }, ticks: { color: textColor } }
+            }
+          }
+        }));
+
+        // Category Distribution Donut
+        const cats = ['STUDY', 'PRODUCTIVITY', 'HEALTH', 'WELLNESS'];
+        const catCounts = cats.map(c => state.habits.filter(h => h.category === c).length);
+        activeCharts.push(new Chart(document.getElementById('dash-cat-chart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Study', 'Productivity', 'Health', 'Wellness'],
+            datasets: [{
+              data: catCounts,
+              backgroundColor: ['#6366f1', '#8b5cf6', '#10b981', '#14b8a6'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '66%',
+            plugins: {
+              legend: { position: 'bottom', labels: { color: textColor, padding: 16 } }
+            }
+          }
+        }));
+      }
+
+      function kpiCard(label, value, colorClass) {
+        return `
+          <div class="surface border rounded-2xl p-4 shadow-xs">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-muted">${label}</div>
+            <div class="text-2xl font-extrabold mt-1.5 ${colorClass}">${value}</div>
+          </div>
+        `;
+      }
+
+      // 2. HABIT TRACKER
+      function renderHabits(el) {
+        const filtered = state.habits.filter(h => {
+          const matchText = h.name.toLowerCase().includes(habitSearch.toLowerCase());
+          const matchCat = habitCategoryFilter === 'ALL' || h.category === habitCategoryFilter;
+          return matchText && matchCat;
+        });
+
+        const baseMonday = getWeekStart(new Date());
+        const weeks = [];
+        for (let w = 0; w < habitWeeksCount; w++) {
+          const start = new Date(baseMonday);
+          start.setDate(baseMonday.getDate() + w * 7);
+          const end = new Date(start);
+          end.setDate(start.getDate() + 6);
+          const days = [];
+          for (let d = 0; d < 7; d++) {
+            const cur = new Date(start);
+            cur.setDate(start.getDate() + d);
+            days.push({
+              dateStr: formatDateStr(cur),
+              shortLabel: cur.toLocaleDateString('en-US', { weekday: 'narrow' }) + ' ' + cur.getDate()
+            });
+          }
+          const rangeLabel = `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+          weeks.push({ index: w + 1, rangeLabel, days });
+        }
+
+        el.innerHTML = `
+          <div class="space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-bold">Habit Tracker</h2>
+                <p class="text-xs text-muted">Check off daily habits across multi-week sprints.</p>
+              </div>
+              <button id="add-habit-btn" class="accent-bg text-white px-4 py-2 rounded-xl text-sm font-semibold self-start sm:self-auto">+ Add Habit</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="surface border rounded-2xl p-4 flex flex-wrap items-center gap-3">
+              <input id="habit-search-input" type="text" placeholder="Search habits..." value="${escapeHtml(habitSearch)}" class="flex-1 min-w-[180px] px-3 py-2 rounded-lg border surface text-sm" />
+              <select id="habit-cat-filter" class="px-3 py-2 rounded-lg border surface text-sm">
+                <option value="ALL" ${habitCategoryFilter === 'ALL' ? 'selected' : ''}>All Categories</option>
+                <option value="STUDY" ${habitCategoryFilter === 'STUDY' ? 'selected' : ''}>Study</option>
+                <option value="PRODUCTIVITY" ${habitCategoryFilter === 'PRODUCTIVITY' ? 'selected' : ''}>Productivity</option>
+                <option value="HEALTH" ${habitCategoryFilter === 'HEALTH' ? 'selected' : ''}>Health</option>
+                <option value="WELLNESS" ${habitCategoryFilter === 'WELLNESS' ? 'selected' : ''}>Wellness</option>
+              </select>
+              <label class="flex items-center gap-2 text-xs font-semibold text-muted">
+                <span>Number of Weeks (1–52):</span>
+                <input id="habit-weeks-input" type="number" min="1" max="52" value="${habitWeeksCount}" class="w-16 px-2.5 py-1.5 rounded-lg border surface text-sm text-center" />
+              </label>
+            </div>
+
+            <!-- Multi-week Table -->
+            <div class="surface border rounded-2xl overflow-hidden shadow-xs">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 surface-muted">
+                      <th class="p-3.5 font-bold min-w-[210px] sticky left-0 surface-muted z-10">Habit</th>
+                      <th class="p-3.5 font-bold">Category</th>
+                      ${weeks.map(w => `
+                        <th colspan="7" class="p-2.5 font-bold text-center border-l border-slate-200 dark:border-slate-700 text-xs">
+                          Week ${w.index} (${w.rangeLabel})
+                        </th>
+                      `).join('')}
+                      <th class="p-3.5 font-bold text-right">Action</th>
+                    </tr>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 text-[11px] text-muted">
+                      <th class="p-2 sticky left-0 surface z-10"></th>
+                      <th class="p-2"></th>
+                      ${weeks.map(w => w.days.map(d => `
+                        <th class="p-2 text-center border-l border-slate-200 dark:border-slate-800 min-w-[44px] ${d.dateStr === getTodayStr() ? 'accent-text font-bold' : ''}">${d.shortLabel}</th>
+                      `).join('')).join('')}
+                      <th class="p-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${filtered.length === 0 ? `
+                      <tr><td colspan="${3 + weeks.length * 7}" class="p-8 text-center text-muted">No habits match your current filter.</td></tr>
+                    ` : filtered.map(h => `
+                      <tr class="border-b border-slate-100 dark:border-slate-800/70 hover:bg-slate-50/60 dark:hover:bg-slate-800/30">
+                        <td class="p-3.5 font-semibold sticky left-0 surface z-10">${escapeHtml(h.name)}</td>
+                        <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${categoryBadge(h.category)}">${h.category}</span></td>
+                        ${weeks.map(w => w.days.map(d => {
+                          const checked = (state.habitLogs[d.dateStr] || []).includes(h.id);
+                          return `
+                            <td class="p-2 text-center border-l border-slate-100 dark:border-slate-800">
+                              <input type="checkbox" data-habit-toggle="${h.id}|${d.dateStr}" ${checked ? 'checked' : ''} class="w-4 h-4 accent-indigo-600 cursor-pointer rounded" />
+                            </td>
+                          `;
+                        }).join('')).join('')}
+                        <td class="p-3.5 text-right">
+                          <button data-delete-habit="${h.id}" class="text-xs font-semibold text-rose-600 hover:underline">Delete</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('habit-search-input').addEventListener('input', (e) => {
+          habitSearch = e.target.value;
+          renderCurrentView();
+        });
+        document.getElementById('habit-cat-filter').addEventListener('change', (e) => {
+          habitCategoryFilter = e.target.value;
+          renderCurrentView();
+        });
+        document.getElementById('habit-weeks-input').addEventListener('change', (e) => {
+          const val = Math.min(52, Math.max(1, parseInt(e.target.value, 10) || 4));
+          habitWeeksCount = val;
+          renderCurrentView();
+        });
+
+        el.querySelectorAll('[data-habit-toggle]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const [hid, dstr] = cb.dataset.habitToggle.split('|');
+            toggleHabitOnDate(hid, dstr);
+          });
+        });
+
+        el.querySelectorAll('[data-delete-habit]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const hid = btn.dataset.deleteHabit;
+            state.habits = state.habits.filter(h => h.id !== hid);
+            saveState();
+            showToast('Habit deleted');
+            renderCurrentView();
+          });
+        });
+
+        document.getElementById('add-habit-btn').addEventListener('click', () => {
+          openModal('Add New Habit', `
+            <form id="new-habit-form" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-muted mb-1">Habit Name</label>
+                <input id="nh-name" type="text" required placeholder="e.g., Practice Algorithms (45m)" class="w-full px-3 py-2 rounded-lg border surface text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-muted mb-1">Category</label>
+                <select id="nh-cat" class="w-full px-3 py-2 rounded-lg border surface text-sm">
+                  <option value="STUDY">Study</option>
+                  <option value="PRODUCTIVITY">Productivity</option>
+                  <option value="HEALTH">Health</option>
+                  <option value="WELLNESS">Wellness</option>
+                </select>
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="button" id="nh-cancel" class="px-4 py-2 rounded-lg border text-sm">Cancel</button>
+                <button type="submit" class="accent-bg text-white px-4 py-2 rounded-lg text-sm font-semibold">Add Habit</button>
+              </div>
+            </form>
+          `);
+          document.getElementById('nh-cancel').addEventListener('click', closeModal);
+          document.getElementById('new-habit-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('nh-name').value.trim();
+            const category = document.getElementById('nh-cat').value;
+            if (!name) return;
+            state.habits.push({ id: uid('h'), name, category });
+            saveState();
+            closeModal();
+            showToast('Habit added');
+            renderCurrentView();
+          });
+        });
+      }
+
+      // 3. CALENDAR
+      function renderCalendar(el) {
+        const year = calendarDate.getFullYear();
+        const month = calendarDate.getMonth();
+        const monthTitle = calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        const preferMon = state.settings.firstDayOfWeek !== 'sunday';
+        const weekdays = preferMon
+          ? ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+          : ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+        let cells = [];
+        if (calendarMode === 'month') {
+          const firstOfMonth = new Date(year, month, 1);
+          const firstDayIdx = firstOfMonth.getDay();
+          const offset = preferMon ? (firstDayIdx === 0 ? 6 : firstDayIdx - 1) : firstDayIdx;
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          for (let i = 0; i < offset; i++) cells.push(null);
+          for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+        } else {
+          const ws = getWeekStart(calendarDate);
+          for (let i = 0; i < 7; i++) {
+            const d = new Date(ws);
+            d.setDate(ws.getDate() + i);
+            cells.push(d);
+          }
+        }
+
+        const selParts = selectedCalDate.split('-').map(Number);
+        const selObj = new Date(selParts[0], selParts[1] - 1, selParts[2]);
+        const selFormatted = selObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+        const selHabitsDone = state.habitLogs[selectedCalDate] || [];
+        const selTasks = state.tasks.filter(t => t.due === selectedCalDate);
+        const selGoals = state.goals.filter(g => formatDateStr(new Date(g.targetAt)) === selectedCalDate);
+
+        el.innerHTML = `
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <!-- Left Calendar Grid -->
+            <div class="lg:col-span-2 surface border rounded-2xl p-5 shadow-xs space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                  <button id="cal-prev" class="px-3 py-1.5 rounded-lg border text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">&larr; Prev</button>
+                  <h2 class="text-base sm:text-lg font-bold px-2">${monthTitle}</h2>
+                  <button id="cal-next" class="px-3 py-1.5 rounded-lg border text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">Next &rarr;</button>
+                </div>
+                <div class="flex rounded-lg border overflow-hidden text-xs font-semibold">
+                  <button id="cal-mode-month" class="px-3 py-1.5 ${calendarMode === 'month' ? 'accent-bg text-white' : ''}">Month</button>
+                  <button id="cal-mode-week" class="px-3 py-1.5 ${calendarMode === 'week' ? 'accent-bg text-white' : ''}">Week</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-7 gap-1.5 text-center text-[11px] font-bold text-muted">
+                ${weekdays.map(w => `<div class="py-1">${w}</div>`).join('')}
+              </div>
+
+              <div class="grid grid-cols-7 gap-1.5">
+                ${cells.map(d => {
+                  if (!d) return `<div class="h-20 rounded-xl"></div>`;
+                  const dStr = formatDateStr(d);
+                  const pct = getDayCompletionPct(dStr);
+                  const hasTask = state.tasks.some(t => t.due === dStr);
+                  const hasGoal = state.goals.some(g => formatDateStr(new Date(g.targetAt)) === dStr);
+                  const isSel = dStr === selectedCalDate;
+                  const isToday = dStr === getTodayStr();
+                  return `
+                    <button data-cal-day="${dStr}" class="h-20 p-2 rounded-xl border text-left flex flex-col justify-between transition-all ${isSel ? 'accent-border accent-soft-bg ring-2 ring-indigo-500/40' : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'}">
+                      <div class="flex items-center justify-between w-full">
+                        <span class="text-xs font-bold ${isToday ? 'accent-text' : ''}">${d.getDate()}</span>
+                        <div class="flex gap-1">
+                          ${hasTask ? '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>' : ''}
+                          ${hasGoal ? '<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>' : ''}
+                        </div>
+                      </div>
+                      <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md self-start ${pct >= 75 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : pct > 0 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300' : 'surface-muted text-muted'}">${pct}%</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Right Day Inspector -->
+            <div class="surface border rounded-2xl p-5 shadow-xs space-y-5">
+              <div>
+                <h3 class="text-base font-bold">${selFormatted}</h3>
+                <p class="text-xs text-muted mt-0.5">Click any day on the calendar to inspect or toggle habits.</p>
+              </div>
+
+              <div>
+                <div class="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">Habits on This Day</div>
+                <div class="space-y-2">
+                  ${state.habits.map(h => {
+                    const checked = selHabitsDone.includes(h.id);
+                    return `
+                      <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                        <input type="checkbox" data-insp-habit="${h.id}" ${checked ? 'checked' : ''} class="w-4 h-4 accent-indigo-600 rounded" />
+                        <span class="text-sm font-medium flex-1 ${checked ? 'line-through text-muted' : ''}">${escapeHtml(h.name)}</span>
+                      </label>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+
+              <div>
+                <div class="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">Tasks Due</div>
+                ${selTasks.length === 0 ? `<p class="text-xs text-muted">No tasks due on this date.</p>` : `
+                  <div class="space-y-2">
+                    ${selTasks.map(t => `
+                      <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+                        <span class="text-xs font-medium ${t.completed ? 'line-through text-muted' : ''}">${escapeHtml(t.title)}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${priorityBadge(t.priority)}">${t.priority}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+
+              <div>
+                <div class="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">Goals &amp; Deadlines</div>
+                ${selGoals.length === 0 ? `<p class="text-xs text-muted">No goal deadlines on this date.</p>` : `
+                  <div class="space-y-2">
+                    ${selGoals.map(g => `
+                      <div class="p-2.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/30 text-xs font-semibold">${escapeHtml(g.title)}</div>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('cal-prev').addEventListener('click', () => {
+          if (calendarMode === 'month') calendarDate.setMonth(calendarDate.getMonth() - 1);
+          else calendarDate.setDate(calendarDate.getDate() - 7);
+          renderCurrentView();
+        });
+        document.getElementById('cal-next').addEventListener('click', () => {
+          if (calendarMode === 'month') calendarDate.setMonth(calendarDate.getMonth() + 1);
+          else calendarDate.setDate(calendarDate.getDate() + 7);
+          renderCurrentView();
+        });
+        document.getElementById('cal-mode-month').addEventListener('click', () => { calendarMode = 'month'; renderCurrentView(); });
+        document.getElementById('cal-mode-week').addEventListener('click', () => { calendarMode = 'week'; renderCurrentView(); });
+
+        el.querySelectorAll('[data-cal-day]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            selectedCalDate = btn.dataset.calDay;
+            renderCurrentView();
+          });
+        });
+
+        el.querySelectorAll('[data-insp-habit]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            toggleHabitOnDate(cb.dataset.inspHabit, selectedCalDate);
+          });
+        });
+      }
+
+      // 4. GOALS & COUNTDOWN
+      function renderGoals(el) {
+        el.innerHTML = `
+          <div class="space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-bold">Goals &amp; Live Countdowns</h2>
+                <p class="text-xs text-muted">Track critical deadlines with real-time countdown timers.</p>
+              </div>
+              <button id="add-goal-btn" class="accent-bg text-white px-4 py-2 rounded-xl text-sm font-semibold self-start sm:self-auto">+ Add Countdown</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="goals-grid">
+              ${state.goals.length === 0 ? `<div class="surface border rounded-2xl p-8 text-center text-muted md:col-span-2">No active countdowns. Click "+ Add Countdown" to set a target.</div>` : state.goals.map(g => {
+                const totalSpan = Math.max(1, g.targetAt - g.createdAt);
+                const elapsed = Math.min(100, Math.max(0, Math.round(((Date.now() - g.createdAt) / totalSpan) * 100)));
+                const targetStr = new Date(g.targetAt).toISOString().slice(0, 16).replace('T', ' ');
+                return `
+                  <div class="surface border rounded-2xl p-5 shadow-xs flex flex-col justify-between gap-4">
+                    <div>
+                      <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <h3 class="text-base font-bold">${escapeHtml(g.title)}</h3>
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${priorityBadge(g.priority)}">${g.priority}</span>
+                        </div>
+                        <button data-delete-goal="${g.id}" class="text-xs font-semibold text-rose-600 hover:underline">Delete</button>
+                      </div>
+                      <p class="text-xs text-muted mt-1.5">${escapeHtml(g.description)}</p>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2 text-center" data-countdown="${g.targetAt}">
+                      <div class="surface-muted rounded-xl p-2.5"><div class="text-xl font-extrabold cd-days">--</div><div class="text-[10px] font-bold text-muted">DAYS</div></div>
+                      <div class="surface-muted rounded-xl p-2.5"><div class="text-xl font-extrabold cd-hours">--</div><div class="text-[10px] font-bold text-muted">HOURS</div></div>
+                      <div class="surface-muted rounded-xl p-2.5"><div class="text-xl font-extrabold cd-mins">--</div><div class="text-[10px] font-bold text-muted">MINS</div></div>
+                      <div class="surface-muted rounded-xl p-2.5"><div class="text-xl font-extrabold cd-secs">--</div><div class="text-[10px] font-bold text-muted">SECS</div></div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <div class="flex justify-between text-xs text-muted font-medium">
+                        <span>Target: ${targetStr}</span>
+                        <span>${elapsed}% elapsed</span>
+                      </div>
+                      <div class="w-full h-2 rounded-full surface-muted overflow-hidden">
+                        <div class="accent-bg h-full rounded-full" style="width: ${elapsed}%"></div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        function updateTimers() {
+          el.querySelectorAll('[data-countdown]').forEach(box => {
+            const target = Number(box.dataset.countdown);
+            const diff = Math.max(0, target - Date.now());
+            const days = Math.floor(diff / 86400000);
+            const hours = Math.floor((diff % 86400000) / 3600000);
+            const mins = Math.floor((diff % 3600000) / 60000);
+            const secs = Math.floor((diff % 60000) / 1000);
+            box.querySelector('.cd-days').textContent = String(days).padStart(2, '0');
+            box.querySelector('.cd-hours').textContent = String(hours).padStart(2, '0');
+            box.querySelector('.cd-mins').textContent = String(mins).padStart(2, '0');
+            box.querySelector('.cd-secs').textContent = String(secs).padStart(2, '0');
+          });
+        }
+        updateTimers();
+        countdownInterval = setInterval(updateTimers, 1000);
+
+        el.querySelectorAll('[data-delete-goal]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.goals = state.goals.filter(g => g.id !== btn.dataset.deleteGoal);
+            saveState();
+            showToast('Countdown removed');
+            renderCurrentView();
+          });
+        });
+
+        document.getElementById('add-goal-btn').addEventListener('click', () => {
+          const defDate = addDays(getTodayStr(), 14) + 'T09:00';
+          openModal('Add Live Countdown', `
+            <form id="new-goal-form" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-muted mb-1">Goal Title</label>
+                <input id="ng-title" type="text" required placeholder="e.g., Launch Portfolio Site" class="w-full px-3 py-2 rounded-lg border surface text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-muted mb-1">Description</label>
+                <input id="ng-desc" type="text" placeholder="Short milestone summary" class="w-full px-3 py-2 rounded-lg border surface text-sm" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold uppercase text-muted mb-1">Priority</label>
+                  <select id="ng-prio" class="w-full px-3 py-2 rounded-lg border surface text-sm">
+                    <option value="HIGH">HIGH</option>
+                    <option value="MEDIUM" selected>MEDIUM</option>
+                    <option value="LOW">LOW</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold uppercase text-muted mb-1">Target Date/Time</label>
+                  <input id="ng-target" type="datetime-local" required value="${defDate}" class="w-full px-3 py-2 rounded-lg border surface text-sm" />
+                </div>
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="button" id="ng-cancel" class="px-4 py-2 rounded-lg border text-sm">Cancel</button>
+                <button type="submit" class="accent-bg text-white px-4 py-2 rounded-lg text-sm font-semibold">Create</button>
+              </div>
+            </form>
+          `);
+          document.getElementById('ng-cancel').addEventListener('click', closeModal);
+          document.getElementById('new-goal-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('ng-title').value.trim();
+            const description = document.getElementById('ng-desc').value.trim();
+            const priority = document.getElementById('ng-prio').value;
+            const targetAt = new Date(document.getElementById('ng-target').value).getTime();
+            if (!title || isNaN(targetAt)) return;
+            state.goals.push({ id: uid('g'), title, description, priority, createdAt: Date.now(), targetAt });
+            saveState();
+            closeModal();
+            showToast('Countdown created');
+            renderCurrentView();
+          });
+        });
+      }
+
+      // 5. ANALYTICS
+      function renderAnalytics(el) {
+        const kpis = getKPIs();
+        const habitCounts = state.habits.map(h => {
+          let count = 0;
+          Object.values(state.habitLogs).forEach(arr => { if (arr.includes(h.id)) count++; });
+          return { name: h.name, count, category: h.category };
+        }).sort((a, b) => b.count - a.count);
+
+        const topHabit = habitCounts[0] ? `${habitCounts[0].name} (${habitCounts[0].count})` : '—';
+        const lowHabit = habitCounts.length ? `${habitCounts[habitCounts.length - 1].name} (${habitCounts[habitCounts.length - 1].count})` : '—';
+
+        const today = getTodayStr();
+        const heatmapCells = [];
+        for (let i = 89; i >= 0; i--) {
+          const dStr = addDays(today, -i);
+          const pct = getDayCompletionPct(dStr);
+          let bg = 'bg-slate-200 dark:bg-slate-800';
+          if (pct >= 75) bg = 'bg-indigo-600';
+          else if (pct >= 50) bg = 'bg-indigo-400';
+          else if (pct > 0) bg = 'bg-indigo-200 dark:bg-indigo-900';
+          heatmapCells.push(`<div title="${dStr}: ${pct}%" class="w-3.5 h-3.5 rounded-xs ${bg}"></div>`);
+        }
+
+        el.innerHTML = `
+          <div class="space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h2 class="text-lg font-bold">Performance Analytics</h2>
+              <select id="analytics-period" class="px-3 py-2 rounded-xl border surface text-sm font-medium">
+                <option value="month" ${analyticsPeriod === 'month' ? 'selected' : ''}>Current Month</option>
+                <option value="week" ${analyticsPeriod === 'week' ? 'selected' : ''}>Last 7 Days</option>
+                <option value="quarter" ${analyticsPeriod === 'quarter' ? 'selected' : ''}>Last 90 Days</option>
+              </select>
+            </div>
+
+            <!-- 9 KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              ${kpiCard('TOTAL HABITS COMPLETED', `${kpis.totalLogs}`, 'text-indigo-600 dark:text-indigo-400')}
+              ${kpiCard('CYCLE COMPLETION %', `${kpis.monthlyPct}%`, 'text-purple-600 dark:text-purple-400')}
+              ${kpiCard('MONTHLY AVERAGE', `${kpis.monthlyPct}%`, 'text-blue-600 dark:text-blue-400')}
+              ${kpiCard('BEST WEEK', `Week 1 (${kpis.weeklyPct}%)`, 'text-emerald-600 dark:text-emerald-400')}
+              ${kpiCard('BEST MONTH', `${today.slice(0, 7)} (${kpis.totalLogs})`, 'text-teal-600 dark:text-teal-400')}
+              ${kpiCard('LONGEST STREAK', `${kpis.longestStreak} days`, 'text-amber-600 dark:text-amber-400')}
+              ${kpiCard('CURRENT STREAK', `${kpis.currentStreak} days`, 'text-emerald-600 dark:text-emerald-400')}
+              ${kpiCard('MOST SUCCESSFUL HABIT', escapeHtml(topHabit), 'text-sm sm:text-base text-indigo-600 dark:text-indigo-400')}
+              ${kpiCard('NEEDS FOCUS HABIT', escapeHtml(lowHabit), 'text-sm sm:text-base text-rose-600 dark:text-rose-400')}
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div class="surface border rounded-2xl p-5"><h3 class="text-sm font-bold mb-3">Daily Completion Bar Chart</h3><div class="relative h-64"><canvas id="an-daily"></canvas></div></div>
+              <div class="surface border rounded-2xl p-5"><h3 class="text-sm font-bold mb-3">Weekly Trend Line</h3><div class="relative h-64"><canvas id="an-trend"></canvas></div></div>
+              <div class="surface border rounded-2xl p-5"><h3 class="text-sm font-bold mb-3">Monthly Velocity</h3><div class="relative h-64"><canvas id="an-velocity"></canvas></div></div>
+              <div class="surface border rounded-2xl p-5"><h3 class="text-sm font-bold mb-3">Habit Share (Pie)</h3><div class="relative h-64"><canvas id="an-pie"></canvas></div></div>
+              <div class="surface border rounded-2xl p-5"><h3 class="text-sm font-bold mb-3">Task Completion Ratio</h3><div class="relative h-64"><canvas id="an-task"></canvas></div></div>
+              <div class="surface border rounded-2xl p-5"><h3 class="text-sm font-bold mb-3">Category Balance (Radar)</h3><div class="relative h-64"><canvas id="an-radar"></canvas></div></div>
+            </div>
+
+            <!-- 90-day Heatmap -->
+            <div class="surface border rounded-2xl p-5">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold">Contribution Activity Heatmap (Last 90 Days)</h3>
+                <span class="text-xs text-muted">Hover squares for daily %</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5">${heatmapCells.join('')}</div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('analytics-period').addEventListener('change', (e) => {
+          analyticsPeriod = e.target.value;
+          renderCurrentView();
+        });
+
+        const isDark = state.settings.theme === 'dark';
+        const textColor = isDark ? '#94a3b8' : '#64748b';
+        const gridColor = isDark ? 'rgba(148,163,184,0.12)' : 'rgba(148,163,184,0.22)';
+        const accent = state.settings.accent || '#6366f1';
+
+        const ws = getWeekStart(new Date());
+        const dLabels = [], dVals = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(ws); d.setDate(ws.getDate() + i);
+          dLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+          dVals.push(getDayCompletionPct(formatDateStr(d)));
+        }
+
+        activeCharts.push(new Chart(document.getElementById('an-daily'), {
+          type: 'bar',
+          data: { labels: dLabels, datasets: [{ label: '%', data: dVals, backgroundColor: accent, borderRadius: 6 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { max: 100, grid: { color: gridColor }, ticks: { color: textColor } }, x: { grid: { display: false }, ticks: { color: textColor } } } }
+        }));
+
+        const wVals = [3, 2, 1, 0].map(w => {
+          let sum = 0;
+          for (let i = 0; i < 7; i++) sum += getDayCompletionPct(addDays(today, -(w * 7 + i)));
+          return Math.round(sum / 7);
+        });
+
+        activeCharts.push(new Chart(document.getElementById('an-trend'), {
+          type: 'line',
+          data: { labels: ['W1', 'W2', 'W3', 'W4'], datasets: [{ label: 'Weekly %', data: wVals, borderColor: accent, backgroundColor: hexToRgba(accent, 0.15), fill: true, tension: 0.35 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, grid: { color: gridColor }, ticks: { color: textColor } }, x: { grid: { display: false }, ticks: { color: textColor } } } }
+        }));
+
+        activeCharts.push(new Chart(document.getElementById('an-velocity'), {
+          type: 'bar',
+          data: { labels: ['Week 1', 'Week 2', 'Week 3', 'Current'], datasets: [{ label: 'Velocity', data: wVals, backgroundColor: ['#94a3b8', '#818cf8', '#6366f1', '#10b981'], borderRadius: 6 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, grid: { color: gridColor }, ticks: { color: textColor } }, x: { grid: { display: false }, ticks: { color: textColor } } } }
+        }));
+
+        activeCharts.push(new Chart(document.getElementById('an-pie'), {
+          type: 'pie',
+          data: {
+            labels: habitCounts.map(h => h.name),
+            datasets: [{ data: habitCounts.map(h => Math.max(1, h.count)), backgroundColor: ['#6366f1', '#8b5cf6', '#10b981', '#14b8a6', '#f59e0b'], borderWidth: 0 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+        }));
+
+        const doneTasks = state.tasks.filter(t => t.completed).length;
+        const pendingTasks = state.tasks.length - doneTasks;
+        activeCharts.push(new Chart(document.getElementById('an-task'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Completed Tasks', 'Pending Tasks'],
+            datasets: [{ data: [doneTasks, pendingTasks], backgroundColor: ['#10b981', '#cbd5e1'], borderWidth: 0 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+        }));
+
+        const cats = ['STUDY', 'PRODUCTIVITY', 'HEALTH', 'WELLNESS'];
+        const catScores = cats.map(c => {
+          const ids = state.habits.filter(h => h.category === c).map(h => h.id);
+          if (!ids.length) return 0;
+          let hits = 0;
+          for (let i = 0; i < 7; i++) {
+            const log = state.habitLogs[addDays(today, -i)] || [];
+            ids.forEach(id => { if (log.includes(id)) hits++; });
+          }
+          return Math.round((hits / (ids.length * 7)) * 100);
+        });
+
+        activeCharts.push(new Chart(document.getElementById('an-radar'), {
+          type: 'radar',
+          data: {
+            labels: ['Study', 'Productivity', 'Health', 'Wellness'],
+            datasets: [{ label: 'Consistency %', data: catScores, borderColor: accent, backgroundColor: hexToRgba(accent, 0.2) }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { color: gridColor }, pointLabels: { color: textColor } } }, plugins: { legend: { display: false } } }
+        }));
+      }
+
+      // 6. NOTES
+      function renderNotes(el) {
+        const filtered = state.notes.filter(n => {
+          if (noteFilter === 'pinned') return n.pinned;
+          if (noteFilter === 'checklists') return n.type === 'checklist';
+          return true;
+        }).sort((a, b) => Number(b.pinned) - Number(a.pinned));
+
+        el.innerHTML = `
+          <div class="space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex gap-2">
+                <button data-nf="all" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold border ${noteFilter === 'all' ? 'accent-bg text-white border-transparent' : 'surface'}">All Notes</button>
+                <button data-nf="pinned" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold border ${noteFilter === 'pinned' ? 'accent-bg text-white border-transparent' : 'surface'}">Pinned</button>
+                <button data-nf="checklists" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold border ${noteFilter === 'checklists' ? 'accent-bg text-white border-transparent' : 'surface'}">Checklists</button>
+              </div>
+              <button id="add-note-btn" class="accent-bg text-white px-4 py-2 rounded-xl text-sm font-semibold self-start sm:self-auto">+ Add Note</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              ${filtered.length === 0 ? `<div class="surface border rounded-2xl p-8 text-center text-muted md:col-span-2">No notes in this view.</div>` : filtered.map(n => `
+                <div class="surface border rounded-2xl p-5 shadow-xs space-y-3">
+                  <div class="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 class="font-bold text-base">${n.pinned ? '📌 ' : ''}${escapeHtml(n.title)}</h3>
+                      <span class="text-[11px] text-muted">${n.date}</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs font-semibold">
+                      <button data-pin-note="${n.id}" class="accent-text hover:underline">${n.pinned ? 'Unpin' : 'Pin'}</button>
+                      <button data-del-note="${n.id}" class="text-rose-600 hover:underline">Delete</button>
+                    </div>
+                  </div>
+                  ${n.type === 'checklist' ? `
+                    <div class="space-y-2 pt-1">
+                      ${n.items.map(it => `
+                        <label class="flex items-center gap-2.5 text-sm cursor-pointer">
+                          <input type="checkbox" data-note-item="${n.id}|${it.id}" ${it.done ? 'checked' : ''} class="w-4 h-4 accent-indigo-600 rounded" />
+                          <span class="${it.done ? 'line-through text-muted' : ''}">${escapeHtml(it.text)}</span>
+                        </label>
+                      `).join('')}
+                    </div>
+                  ` : `<p class="text-sm text-muted leading-relaxed">${escapeHtml(n.body)}</p>`}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+
+        el.querySelectorAll('[data-nf]').forEach(b => {
+          b.addEventListener('click', () => { noteFilter = b.dataset.nf; renderCurrentView(); });
+        });
+        el.querySelectorAll('[data-pin-note]').forEach(b => {
+          b.addEventListener('click', () => {
+            const note = state.notes.find(n => n.id === b.dataset.pinNote);
+            if (note) { note.pinned = !note.pinned; saveState(); renderCurrentView(); }
+          });
+        });
+        el.querySelectorAll('[data-del-note]').forEach(b => {
+          b.addEventListener('click', () => {
+            state.notes = state.notes.filter(n => n.id !== b.dataset.delNote);
+            saveState(); showToast('Note deleted'); renderCurrentView();
+          });
+        });
+        el.querySelectorAll('[data-note-item]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const [nid, iid] = cb.dataset.noteItem.split('|');
+            const note = state.notes.find(n => n.id === nid);
+            const item = note && note.items.find(i => i.id === iid);
+            if (item) { item.done = !item.done; saveState(); renderCurrentView(); }
+          });
+        });
+
+        document.getElementById('add-note-btn').addEventListener('click', () => {
+          openModal('Add Note or Checklist', `
+            <form id="new-note-form" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-muted mb-1">Title</label>
+                <input id="nn-title" type="text" required class="w-full px-3 py-2 rounded-lg border surface text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-muted mb-1">Type</label>
+                <select id="nn-type" class="w-full px-3 py-2 rounded-lg border surface text-sm">
+                  <option value="text">Text Note</option>
+                  <option value="checklist">Checklist (one item per line)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-muted mb-1">Content</label>
+                <textarea id="nn-body" rows="4" required placeholder="Write note or checklist lines..." class="w-full px-3 py-2 rounded-lg border surface text-sm"></textarea>
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="button" id="nn-cancel" class="px-4 py-2 rounded-lg border text-sm">Cancel</button>
+                <button type="submit" class="accent-bg text-white px-4 py-2 rounded-lg text-sm font-semibold">Save Note</button>
+              </div>
+            </form>
+          `);
+          document.getElementById('nn-cancel').addEventListener('click', closeModal);
+          document.getElementById('new-note-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('nn-title').value.trim();
+            const type = document.getElementById('nn-type').value;
+            const raw = document.getElementById('nn-body').value.trim();
+            if (!title || !raw) return;
+            const items = type === 'checklist'
+              ? raw.split('\n').map(l => l.trim()).filter(Boolean).map(text => ({ id: uid('ni'), text, done: false }))
+              : [];
+            state.notes.unshift({ id: uid('n'), title, date: getTodayStr(), pinned: false, type, body: type === 'text' ? raw : '', items });
+            saveState(); closeModal(); showToast('Note saved'); renderCurrentView();
+          });
+        });
+      }
+
+      // 7. TO-DO LIST
+      function renderTodos(el) {
+        const filtered = state.tasks.filter(t => {
+          const matchText = t.title.toLowerCase().includes(todoSearch.toLowerCase());
+          const matchPrio = todoPriorityFilter === 'ALL' || t.priority === todoPriorityFilter;
+          const matchStat = todoStatusFilter === 'ALL'
+            || (todoStatusFilter === 'COMPLETED' && t.completed)
+            || (todoStatusFilter === 'PENDING' && !t.completed);
+          return matchText && matchPrio && matchStat;
+        });
+
+        el.innerHTML = `
+          <div class="space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-bold">To-Do List</h2>
+                <p class="text-xs text-muted">Prioritize and check off actionable tasks.</p>
+              </div>
+              <button id="add-todo-btn" class="accent-bg text-white px-4 py-2 rounded-xl text-sm font-semibold self-start sm:self-auto">+ Add Task</button>
+            </div>
+
+            <div class="surface border rounded-2xl p-4 flex flex-wrap gap-3">
+              <input id="todo-search" type="text" placeholder="Search tasks..." value="${escapeHtml(todoSearch)}" class="flex-1 min-w-[180px] px-3 py-2 rounded-lg border surface text-sm" />
+              <select id="todo-prio" class="px-3 py-2 rounded-lg border surface text-sm">
+                <option value="ALL" ${todoPriorityFilter === 'ALL' ? 'selected' : ''}>All Priorities</option>
+                <option value="HIGH" ${todoPriorityFilter === 'HIGH' ? 'selected' : ''}>High</option>
+                <option value="MEDIUM" ${todoPriorityFilter === 'MEDIUM' ? 'selected' : ''}>Medium</option>
+                <option value="LOW" ${todoPriorityFilter === 'LOW' ? 'selected' : ''}>Low</option>
+              </select>
+              <select id="todo-status" class="px-3 py-2 rounded-lg border surface text-sm">
+                <option value="ALL" ${todoStatusFilter === 'ALL' ? 'selected' : ''}>All Status</option>
+                <option value="PENDING" ${todoStatusFilter === 'PENDING' ? 'selected' : ''}>Pending</option>
+                <option value="COMPLETED" ${todoStatusFilter === 'COMPLETED' ? 'selected' : ''}>Completed</option>
+              </select>
+            </div>
+
+            <div class="surface border rounded-2xl divide-y divide-slate-200 dark:divide-slate-800 shadow-xs">
+              ${filtered.length === 0 ? `<div class="p-8 text-center text-muted text-sm">No tasks match your filters.</div>` : filtered.map(t => `
+                <div class="p-4 flex flex-wrap items-center justify-between gap-3">
+                  <label class="flex items-center gap-3 flex-1 min-w-[220px] cursor-pointer">
+                    <input type="checkbox" data-toggle-todo="${t.id}" ${t.completed ? 'checked' : ''} class="w-4 h-4 accent-indigo-600 rounded" />
+                    <div>
+                      <div class="text-sm font-semibold ${t.completed ? 'line-through text-muted' : ''}">${escapeHtml(t.title)}</div>
+                      <div class="text-xs text-muted">Due: ${t.due}</div>
+                    </div>
+                  </label>
+                  <div class="flex items-center gap-3">
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${priorityBadge(t.priority)}">${t.priority}</span>
+                    <button data-del-todo="${t.id}" class="text-xs font-semibold text-rose-600 hover:underline">Delete</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+
+        document.getElementById('todo-search').addEventListener('input', (e) => { todoSearch = e.target.value; renderCurrentView(); });
+        document.getElementById('todo-prio').addEventListener('change', (e) => { todoPriorityFilter = e.target.value; renderCurrentView(); });
+        document.getElementById('todo-status').addEventListener('change', (e) => { todoStatusFilter = e.target.value; renderCurrentView(); });
+
+        el.querySelectorAll('[data-toggle-todo]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const task = state.tasks.find(t => t.id === cb.dataset.toggleTodo);
+            if (task) { task.completed = !task.completed; saveState(); renderCurrentView(); }
+          });
+        });
+        el.querySelectorAll('[data-del-todo]').forEach(b => {
+          b.addEventListener('click', () => {
+            state.tasks = state.tasks.filter(t => t.id !== b.dataset.delTodo);
+            saveState(); showToast('Task deleted'); renderCurrentView();
+          });
+        });
+
+        document.getElementById('add-todo-btn').addEventListener('click', () => {
+          openModal('Add New Task', `
+            <form id="new-todo-form" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-muted mb-1">Task Title</label>
+                <input id="nt-title" type="text" required class="w-full px-3 py-2 rounded-lg border surface text-sm" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold uppercase text-muted mb-1">Due Date</label>
+                  <input id="nt-due" type="date" required value="${getTodayStr()}" class="w-full px-3 py-2 rounded-lg border surface text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold uppercase text-muted mb-1">Priority</label>
+                  <select id="nt-prio" class="w-full px-3 py-2 rounded-lg border surface text-sm">
+                    <option value="HIGH">HIGH</option>
+                    <option value="MEDIUM" selected>MEDIUM</option>
+                    <option value="LOW">LOW</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex justify-end gap-2">
+                <button type="button" id="nt-cancel" class="px-4 py-2 rounded-lg border text-sm">Cancel</button>
+                <button type="submit" class="accent-bg text-white px-4 py-2 rounded-lg text-sm font-semibold">Add Task</button>
+              </div>
+            </form>
+          `);
+          document.getElementById('nt-cancel').addEventListener('click', closeModal);
+          document.getElementById('new-todo-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('nt-title').value.trim();
+            const due = document.getElementById('nt-due').value;
+            const priority = document.getElementById('nt-prio').value;
+            if (!title) return;
+            state.tasks.unshift({ id: uid('t'), title, due, priority, completed: false });
+            saveState(); closeModal(); showToast('Task added'); renderCurrentView();
+          });
+        });
+      }
+
+      // 8. ARCHIVE
+      function renderArchive(el) {
+        el.innerHTML = `
+          <div class="space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 class="text-lg font-bold">Archived Sessions</h2>
+              <button id="snap-btn" class="accent-bg text-white px-4 py-2 rounded-xl text-sm font-semibold self-start sm:self-auto">+ Snapshot Current Session</button>
+            </div>
+
+            ${state.archives.length === 0 ? `
+              <div class="surface border rounded-2xl p-10 text-center text-sm text-muted">
+                No archived sessions yet. Click "Archive Session" in the top bar to save a snapshot of your current progress!
+              </div>
+            ` : `
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${state.archives.map(a => `
+                  <div class="surface border rounded-2xl p-5 space-y-3 shadow-xs">
+                    <div class="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 class="font-bold text-base">${escapeHtml(a.label)}</h3>
+                        <p class="text-xs text-muted">${a.createdAt}</p>
+                      </div>
+                      <button data-del-arc="${a.id}" class="text-xs font-semibold text-rose-600 hover:underline">Delete</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div class="surface-muted rounded-xl p-2"><div class="font-bold">${a.kpis.todayPct}%</div><div class="text-muted">Today</div></div>
+                      <div class="surface-muted rounded-xl p-2"><div class="font-bold">${a.kpis.currentStreak}d</div><div class="text-muted">Streak</div></div>
+                      <div class="surface-muted rounded-xl p-2"><div class="font-bold">${a.kpis.completedTasks}</div><div class="text-muted">Tasks</div></div>
+                    </div>
+                    <button data-restore-arc="${a.id}" class="w-full py-2 rounded-xl border text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">Restore This Snapshot</button>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        `;
+
+        document.getElementById('snap-btn').addEventListener('click', () => {
+          document.getElementById('archive-session-btn').click();
+        });
+        el.querySelectorAll('[data-del-arc]').forEach(b => {
+          b.addEventListener('click', () => {
+            state.archives = state.archives.filter(a => a.id !== b.dataset.delArc);
+            saveState(); showToast('Snapshot deleted'); renderCurrentView();
+          });
+        });
+        el.querySelectorAll('[data-restore-arc]').forEach(b => {
+          b.addEventListener('click', () => {
+            const arc = state.archives.find(a => a.id === b.dataset.restoreArc);
+            if (!arc) return;
+            state.habits = JSON.parse(JSON.stringify(arc.snapshot.habits));
+            state.habitLogs = JSON.parse(JSON.stringify(arc.snapshot.habitLogs));
+            state.tasks = JSON.parse(JSON.stringify(arc.snapshot.tasks));
+            state.goals = JSON.parse(JSON.stringify(arc.snapshot.goals));
+            state.notes = JSON.parse(JSON.stringify(arc.snapshot.notes));
+            saveState();
+            showToast('Snapshot restored');
+            switchView('dashboard');
+          });
+        });
+      }
+
+      // 9. SETTINGS
+      function renderSettings(el) {
+        el.innerHTML = `
+          <div class="space-y-6 max-w-3xl">
+            <div class="surface border rounded-2xl p-5 sm:p-6 space-y-4 shadow-xs">
+              <h2 class="text-base font-bold">Appearance &amp; Preferences</h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold uppercase text-muted mb-1">Theme Mode</label>
+                  <select id="set-theme" class="w-full px-3 py-2 rounded-lg border surface text-sm">
+                    <option value="light" ${state.settings.theme === 'light' ? 'selected' : ''}>Light Mode</option>
+                    <option value="dark" ${state.settings.theme === 'dark' ? 'selected' : ''}>Dark Mode</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold uppercase text-muted mb-1">Accent Color</label>
+                  <input id="set-accent" type="color" value="${state.settings.accent || '#6366f1'}" class="w-full h-10 p-1 rounded-lg border surface cursor-pointer" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold uppercase text-muted mb-1">Font Size</label>
+                  <select id="set-font" class="w-full px-3 py-2 rounded-lg border surface text-sm">
+                    <option value="small" ${state.settings.fontSize === 'small' ? 'selected' : ''}>Small</option>
+                    <option value="medium" ${state.settings.fontSize === 'medium' ? 'selected' : ''}>Medium</option>
+                    <option value="large" ${state.settings.fontSize === 'large' ? 'selected' : ''}>Large</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold uppercase text-muted mb-1">First Day of Week</label>
+                  <select id="set-weekstart" class="w-full px-3 py-2 rounded-lg border surface text-sm">
+                    <option value="monday" ${state.settings.firstDayOfWeek === 'monday' ? 'selected' : ''}>Monday</option>
+                    <option value="sunday" ${state.settings.firstDayOfWeek === 'sunday' ? 'selected' : ''}>Sunday</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="surface border rounded-2xl p-5 sm:p-6 space-y-4 shadow-xs">
+              <h2 class="text-base font-bold">Backup, Export &amp; Reset</h2>
+              <div class="flex flex-wrap gap-2.5">
+                <button id="exp-json" class="px-4 py-2 rounded-xl border text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">Export JSON Backup</button>
+                <button id="exp-csv" class="px-4 py-2 rounded-xl border text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">Export CSV Report</button>
+                <button id="exp-pdf" class="px-4 py-2 rounded-xl border text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">Export PDF Report</button>
+                <label class="px-4 py-2 rounded-xl border text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                  Import JSON Backup
+                  <input id="imp-json" type="file" accept=".json" class="hidden" />
+                </label>
+              </div>
+
+              <div class="p-4 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/70 dark:bg-rose-950/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div class="text-sm font-bold text-rose-700 dark:text-rose-300">Factory Reset</div>
+                  <div class="text-xs text-rose-600/80 dark:text-rose-400">Erase all habits, tasks, notes, and logs permanently.</div>
+                </div>
+                <button id="reset-all-btn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold self-start sm:self-auto">Reset All Data</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('set-theme').addEventListener('change', (e) => {
+          state.settings.theme = e.target.value;
+          saveState(); applySettings();
+        });
+        document.getElementById('set-accent').addEventListener('input', (e) => {
+          state.settings.accent = e.target.value;
+          saveState(); applySettings();
+        });
+        document.getElementById('set-font').addEventListener('change', (e) => {
+          state.settings.fontSize = e.target.value;
+          saveState(); applySettings();
+        });
+        document.getElementById('set-weekstart').addEventListener('change', (e) => {
+          state.settings.firstDayOfWeek = e.target.value;
+          saveState(); showToast('Week start updated');
+        });
+
+        document.getElementById('exp-json').addEventListener('click', () => {
+          downloadFile('lifetrack-backup.json', JSON.stringify(state, null, 2), 'application/json');
+          showToast('JSON backup downloaded');
+        });
+        document.getElementById('exp-csv').addEventListener('click', () => {
+          const rows = ['Date,CompletedHabits,TotalHabits,CompletionPct'];
+          Object.keys(state.habitLogs).sort().forEach(d => {
+            const count = state.habitLogs[d].length;
+            rows.push(`${d},${count},${state.habits.length},${getDayCompletionPct(d)}%`);
+          });
+          downloadFile('lifetrack-report.csv', rows.join('\n'), 'text/csv');
+          showToast('CSV report downloaded');
+        });
+        document.getElementById('exp-pdf').addEventListener('click', () => {
+          window.print();
+        });
+        document.getElementById('imp-json').addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const imported = JSON.parse(reader.result);
+              state = { ...getDefaultState(), ...imported };
+              saveState(); applySettings(); renderCurrentView();
+              showToast('Backup imported successfully');
+            } catch (err) {
+              showToast('Invalid JSON backup file', 'error');
+            }
+          };
+          reader.readAsText(file);
+        });
+
+        document.getElementById('reset-all-btn').addEventListener('click', () => {
+          openModal('Confirm Factory Reset', `
+            <div class="space-y-4">
+              <p class="text-sm text-muted">Are you sure you want to erase all habits, tasks, notes, and logs and restore the default template?</p>
+              <div class="flex justify-end gap-2">
+                <button id="rst-cancel" class="px-4 py-2 rounded-lg border text-sm">Cancel</button>
+                <button id="rst-confirm" class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold">Yes, Reset Everything</button>
+              </div>
+            </div>
+          `);
+          document.getElementById('rst-cancel').addEventListener('click', closeModal);
+          document.getElementById('rst-confirm').addEventListener('click', () => {
+            state = getDefaultState();
+            saveState(); applySettings(); closeModal();
+            showToast('All data reset to defaults');
+            switchView('dashboard');
+          });
+        });
+      }
+
+      function downloadFile(filename, content, mime) {
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // Init
+      applySettings();
+      renderCurrentView();
+    })();
+  </script>
+</body>
+</html>
